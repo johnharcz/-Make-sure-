@@ -1,0 +1,3757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bible Memory Game</title>
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Lato:wght@400;700&display=swap');
+:root{
+  --navy:#0d2145;--navy-mid:#1a3a6e;--navy-light:#2a5298;
+  --gold:#c9a84c;--gold-light:#f0d98a;--gold-dark:#a8782a;
+  --cream:#fdf8ef;--cream-dark:#f2e9d8;
+  --ink:#162033;--muted:#3d4f5e;
+  --primary:#1457d9;--primary-dark:#0f3f9e;--primary-soft:#e8f0ff;
+  --success:#1d7f43;--success-soft:#dcf7e6;
+  --line:#c8d3e0;--shadow:0 10px 28px rgba(13,33,69,.15);--radius:14px;
+}
+/* High-contrast mode */
+body.hc{
+  --navy:#000;--navy-mid:#000;--navy-light:#000;
+  --gold:#ffff00;--gold-light:#ffff00;--gold-dark:#cccc00;
+  --cream:#fff;--cream-dark:#fff;
+  --ink:#000;--muted:#000;
+  --primary:#00008b;--primary-soft:#e0e0ff;
+  --success:#006400;--success-soft:#ccffcc;
+  --line:#000;
+  background:#000!important;color:#fff!important;
+}
+body.hc .section{background:#fff!important;border:3px solid #000!important;}
+body.hc .page-header{background:#000!important;}
+body.hc .audio-bar{background:#000!important;border-bottom:3px solid #ffff00!important;}
+body.hc button{background:#fff!important;color:#000!important;border:3px solid #000!important;}
+body.hc button.primary{background:#000!important;color:#ffff00!important;border:3px solid #ffff00!important;}
+body.hc .word-btn{background:#fff!important;color:#000!important;border:3px solid #000!important;}
+body.hc .slot-btn.correct-lock{background:#ccffcc!important;color:#004400!important;border:3px solid #006400!important;}
+body.hc input[type="text"],body.hc select,body.hc textarea{border:3px solid #000!important;}
+*{box-sizing:border-box;margin:0;padding:0;}html{min-height:100%;}
+body{font-family:'Lato',Arial,sans-serif;font-size:18px;line-height:1.55;background:var(--navy);color:var(--cream);padding:0 0 40px;}
+/* Page header */
+.page-header{background:linear-gradient(160deg,var(--navy) 0%,var(--navy-mid) 100%);padding:28px 24px 20px;border-bottom:3px solid var(--gold);position:relative;overflow:hidden;}
+.page-header h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,42px);color:var(--gold-light);letter-spacing:-.01em;text-shadow:0 2px 14px rgba(0,0,0,.4);max-width:980px;margin:0 auto 6px;}
+.page-header>p{max-width:980px;margin:0 auto;color:rgba(253,248,239,.65);font-size:17px;}
+/* Sticky audio bar */
+.audio-bar{background:var(--navy-mid);border-bottom:2px solid var(--gold);padding:10px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:200;}
+.audio-bar-btn{background:var(--gold);color:var(--navy);border:none;border-radius:50px;padding:10px 26px;font-family:'Lato',sans-serif;font-size:18px;font-weight:700;cursor:pointer;min-width:120px;}
+.audio-bar-btn:focus{outline:4px solid #ffbf47;outline-offset:2px;}
+.audio-bar-hint{font-size:14px;color:rgba(253,248,239,.6);line-height:1.3;}
+/* Main content wrapper */
+.page-body{padding:24px;max-width:1028px;margin:0 auto;}
+h2{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:12px;margin-top:6px;color:var(--navy);}
+h3{font-size:20px;margin-bottom:8px;margin-top:16px;color:var(--navy);}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+#live-region{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+.section{position:relative;background:var(--cream);border:1px solid #d4c9b0;border-radius:var(--radius);padding:24px;margin-bottom:22px;box-shadow:var(--shadow);}
+.section:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.2),var(--shadow);}
+label{display:block;font-weight:700;margin-bottom:6px;color:#1b2c44;}
+input[type="text"],select,textarea{font-size:18px;padding:12px 14px;border:2px solid #8a9ab0;border-radius:10px;width:320px;background:#fff;color:var(--ink);min-height:48px;}
+select{cursor:pointer;}
+input[type="text"]:focus,select:focus,textarea:focus{outline:4px solid #ffbf47;outline-offset:3px;border-color:var(--navy-light);}
+textarea{width:100%;max-width:520px;resize:vertical;font-family:'Lato',Arial,sans-serif;line-height:1.5;}
+input[type="radio"]{margin-right:10px;transform:scale(1.25);}
+.radio-group{margin-bottom:12px;display:grid;gap:8px;}
+.radio-group label{font-weight:700;display:flex;align-items:center;margin-bottom:0;cursor:pointer;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#f8fbff;max-width:360px;}
+.radio-group label:hover{background:var(--cream-dark);border-color:var(--gold);}
+button{font-size:18px;font-family:'Lato',Arial,sans-serif;font-weight:700;padding:12px 20px;border:2px solid #30455f;border-radius:12px;background:#fff;color:#102045;cursor:pointer;margin:5px 6px 5px 0;min-height:48px;box-shadow:0 2px 0 rgba(0,0,0,.12);}
+button:hover{background:var(--cream-dark);border-color:var(--navy);}
+button:active{transform:translateY(1px);box-shadow:none;}
+button:focus{outline:4px solid #ffbf47;outline-offset:3px;}
+button.primary{background:var(--navy);color:var(--gold-light);border-color:var(--navy);}
+button.primary:hover{background:var(--navy-mid);}
+button.small{font-size:16px;padding:8px 14px;min-height:40px;border-radius:10px;}
+#word-bank-container{border:2px solid #8a9ab0;border-radius:14px;padding:14px;min-height:72px;background:#f8fbff;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;}
+.word-btn{font-size:19px;font-family:'Lato',Arial,sans-serif;font-weight:700;padding:9px 16px;border:2px solid #30455f;border-radius:999px;background:#fff;color:#102045;cursor:pointer;min-width:48px;text-align:center;}
+.word-btn:focus{outline:4px solid #ffbf47;outline-offset:3px;}
+.word-btn:hover{background:var(--cream-dark);border-color:var(--navy);}
+#answer-slots-container{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;min-height:72px;padding:14px;border:2px dashed var(--gold);border-radius:14px;background:rgba(201,168,76,.07);}
+.slot-btn{font-size:19px;font-family:'Lato',Arial,sans-serif;font-weight:700;padding:9px 16px;border:2px solid #8da1ba;border-radius:999px;background:#fff;color:#445064;cursor:default;min-width:68px;text-align:center;}
+.slot-btn:focus{outline:4px solid #ffbf47;outline-offset:3px;}
+.slot-btn.next-slot{border-color:var(--navy-light);border-width:3px;color:#102045;background:#fff;}
+.slot-btn.correct-lock{background:var(--success-soft);border-color:var(--success);color:#06451f;font-weight:800;}
+.fill-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.fill-hint{font-size:18px;font-weight:800;min-width:78px;color:#20354f;background:var(--cream-dark);border-radius:10px;padding:7px 10px;text-align:center;}
+.fill-input{width:220px;font-size:18px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;min-height:46px;}
+.fill-input:focus{outline:4px solid #ffbf47;outline-offset:3px;border-color:var(--navy-light);}
+.fill-input.locked{border-color:var(--success);background:var(--success-soft);color:#06451f;pointer-events:none;font-weight:800;}
+#feedback{padding:14px 18px;border-radius:12px;font-size:18px;font-weight:800;margin-top:12px;display:none;}
+#feedback.correct{background:var(--success-soft);border:2px solid var(--success);color:#06451f;}
+#feedback.reveal{background:var(--cream-dark);border:2px solid #c8b87a;color:#102045;font-weight:700;}
+#memorized-list{list-style:none;}
+.mem-item{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid #d4c9b0;border-radius:14px;margin-bottom:12px;background:#f8fbff;}
+.mem-ref{font-family:'Playfair Display',serif;font-weight:700;font-size:19px;color:#102045;}
+.mem-verse-text{font-size:17px;color:#2a2a3e;line-height:1.6;font-style:italic;}
+.mem-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.status-txt{font-size:16px;color:var(--muted);margin-top:8px;}
+.error-txt{font-size:16px;color:#9b111e;margin-top:8px;font-weight:800;}
+hr{border:none;border-top:1px solid #d4c9b0;margin:20px 0;}
+#game-section{display:none;}
+#game-desc,#scramble-section p,#fill-section p,#chunk-section p{color:var(--muted)!important;font-size:16px!important;}
+.chunk-box{border:2px solid #c8b87a;border-radius:16px;padding:18px;background:linear-gradient(180deg,var(--cream),var(--cream-dark));margin-bottom:14px;}
+.chunk-current{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;margin-bottom:8px;color:#102045;}
+.chunk-hint{font-size:18px;color:#20354f;margin-bottom:12px;font-weight:700;}
+.chunk-input{width:100%;max-width:820px;font-size:20px;padding:12px 14px;border:2px solid #8a9ab0;border-radius:12px;min-height:52px;}
+.chunk-input:focus{outline:4px solid #ffbf47;outline-offset:3px;border-color:var(--navy-light);}
+.chunk-complete{background:var(--success-soft);border-color:var(--success);color:#06451f;font-weight:800;}
+.loop-on{background:var(--success-soft);border-color:var(--success);color:#06451f;font-weight:800;}
+#hear-chunk-btn{background:var(--navy);color:var(--gold-light);border-color:var(--navy);font-size:20px;padding:14px 24px;}
+#hear-chunk-btn:hover{background:var(--navy-mid);}
+@media(max-width:700px){.page-body{padding:12px;}h1{font-size:28px;}.section{padding:16px;}input[type="text"],select{width:100%;max-width:100%;}button{width:100%;}.radio-group label{max-width:100%;}}
+/* Responsive Phrase Builder layout: side-by-side on wide, stacked on narrow */
+@media(max-width:600px){
+  .chunk-box{flex-direction:column!important;}
+  #chunk-sofar-panel{max-width:100%!important;width:100%;}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;}}
+/* Cloze mode */
+.cloze-verse{font-family:'Playfair Display',serif;font-size:22px;line-height:1.9;color:#102045;margin-bottom:18px;}
+.cloze-blank{display:inline-block;border-bottom:3px solid var(--navy-light);min-width:90px;margin:0 4px;vertical-align:bottom;}
+.cloze-blank input{border:none;border-bottom:3px solid var(--navy-light);background:transparent;font-size:20px;font-family:'Lato',Arial,sans-serif;font-weight:700;color:#102045;width:100%;padding:2px 4px;outline:none;min-width:80px;}
+.cloze-blank input:focus{border-bottom:4px solid var(--primary);outline:3px solid #ffbf47;outline-offset:2px;}
+.cloze-blank input.locked{color:var(--success);border-bottom-color:var(--success);font-weight:800;}
+.cloze-blank input.wrong{border-bottom-color:#9b111e;}
+/* Multiple choice */
+.mc-verse-display{font-family:'Playfair Display',serif;font-size:22px;line-height:1.8;color:#102045;margin-bottom:18px;padding:14px;background:var(--cream-dark);border-radius:12px;border:2px solid #c8b87a;}
+.mc-word-label{font-size:18px;font-weight:700;margin-bottom:12px;color:#20354f;}
+.mc-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:600px;}
+.mc-choice-btn{font-size:18px;font-family:'Lato',Arial,sans-serif;font-weight:700;padding:14px 18px;border:2px solid #30455f;border-radius:12px;background:#fff;color:#102045;cursor:pointer;text-align:left;min-height:54px;}
+.mc-choice-btn:focus{outline:4px solid #ffbf47;outline-offset:3px;}
+.mc-choice-btn:hover{background:var(--cream-dark);border-color:var(--navy);}
+.mc-choice-btn.correct-pick{background:var(--success-soft);border-color:var(--success);color:#06451f;font-weight:800;}
+.mc-choice-btn.wrong-pick{background:#fff0f0;border-color:#9b111e;color:#9b111e;}
+.mc-progress{font-size:17px;color:var(--muted);margin-bottom:14px;font-weight:700;}
+/* Progress bar */
+.progress-wrap{margin:12px 0 6px;height:14px;background:#d4c9b0;border-radius:20px;overflow:hidden;}
+.progress-bar{height:100%;background:var(--success);border-radius:20px;transition:width .3s;}
+body.hc .progress-bar{background:#006400!important;}
+body.hc .mc-choice-btn{background:#fff!important;color:#000!important;border:3px solid #000!important;}
+body.hc .mc-choice-btn.correct-pick{background:#ccffcc!important;color:#004400!important;border-color:#006400!important;}
+body.hc .mc-choice-btn.wrong-pick{background:#ffe0e0!important;color:#8b0000!important;border-color:#8b0000!important;}
+body.hc .mc-verse-display{background:#fff!important;border:3px solid #000!important;}
+body.hc .cloze-blank input{color:#000!important;border-bottom:4px solid #000!important;}
+body.hc .cloze-blank input.locked{color:#004400!important;border-bottom-color:#006400!important;}
+
+/* ── ANIMATIONS (all wrapped in prefers-reduced-motion) ──────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Wrong answer shake on button */
+  @keyframes mc-shake {
+    0%   { transform: translateX(0); }
+    15%  { transform: translateX(-5px); }
+    35%  { transform: translateX(5px); }
+    55%  { transform: translateX(-4px); }
+    75%  { transform: translateX(4px); }
+    90%  { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+  }
+  .mc-choice-btn.wrong-pick {
+    animation: mc-shake 0.35s ease-out;
+  }
+
+  /* Correct answer pulse-glow on button */
+  @keyframes mc-correct-pulse {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(29,127,67,0); }
+    40%  { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(29,127,67,0.28); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(29,127,67,0); }
+  }
+  .mc-choice-btn.correct-pick {
+    animation: mc-correct-pulse 0.45s ease-out forwards;
+  }
+
+  /* New question: choices container fades in */
+  @keyframes mc-fadein {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .mc-choices.mc-entering {
+    animation: mc-fadein 0.18s ease-out forwards;
+  }
+
+  /* Game complete: feedback box shimmer sweep */
+  @keyframes shimmer-sweep {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  #feedback.correct.complete-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--success-soft) 0%,
+      #a8f0c6 40%,
+      #ffffff 50%,
+      #a8f0c6 60%,
+      var(--success-soft) 100%
+    );
+    background-size: 200% auto;
+    animation: shimmer-sweep 1.1s ease-in-out;
+  }
+
+  /* Progress bar fill bounce */
+  @keyframes pb-pop {
+    0%   { transform: scaleY(1); }
+    50%  { transform: scaleY(1.35); }
+    100% { transform: scaleY(1); }
+  }
+  .progress-bar.pb-pop {
+    transform-origin: bottom;
+    animation: pb-pop 0.22s ease-out;
+  }
+
+  /* Game start: game-section slides down gently */
+  @keyframes game-slide-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  #game-section.game-entering {
+    animation: game-slide-in 0.25s ease-out forwards;
+  }
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div aria-live="assertive" aria-atomic="true" id="live-region"></div>
+
+<header class="page-header">
+  <h1>Bible Memory Game</h1>
+</header>
+
+<!-- Sticky Play/Pause bar — always at top, first tab stop -->
+<div class="audio-bar" aria-hidden="false">
+  <button class="audio-bar-btn" id="audio-toggle-btn" aria-label="Play verse audio">▶ Play</button>
+  <button class="audio-bar-btn" id="hc-toggle-btn" aria-label="Enable high contrast mode" style="min-width:80px;">High Contrast</button>
+  <span class="audio-bar-hint" aria-hidden="true">Spacebar toggles audio from anywhere on the page.</span>
+</div>
+
+<div class="page-body">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MEDITATION MODE SECTION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="meditation-section" aria-labelledby="med-heading">
+  <h2 id="med-heading">Meditation Mode</h2>
+
+  <!-- Reflection time ticker -->
+  <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <label style="font-weight:700;color:#1b2c44;font-size:18px;">Reflection pause:</label>
+    <div id="med-timer-spinner"
+         role="spinbutton"
+         aria-label="Reflection time"
+         aria-valuemin="0"
+         aria-valuemax="3660"
+         aria-valuenow="60"
+         aria-valuetext="1 minute"
+         tabindex="0"
+         style="font-size:24px;font-weight:700;color:#102045;background:#fff;border:3px solid #8a9ab0;border-radius:12px;padding:10px 20px;min-width:130px;text-align:center;cursor:default;user-select:none;">
+      1 min
+    </div>
+  </div>
+
+  <!-- Current verse display -->
+  <div id="med-verse-display" role="region" aria-label="Current verse" style="background:var(--cream-dark);border:2px solid #c8b87a;border-radius:14px;padding:18px;margin-bottom:12px;min-height:80px;">
+    <p id="med-verse-ref" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#102045;margin-bottom:8px;">—</p>
+    <p id="med-verse-text" style="font-size:18px;color:#2a2a3e;line-height:1.7;font-style:italic;"></p>
+  </div>
+  <p id="med-status-combined" aria-live="polite" aria-atomic="true" style="font-size:17px;font-weight:700;color:#20354f;margin-bottom:6px;">Ready</p>
+  <p id="med-countdown-lbl" aria-hidden="true" style="font-size:17px;font-weight:700;color:#1d7f43;margin-bottom:12px;min-height:26px;"></p>
+
+  <!-- Playback controls -->
+  <div role="group" aria-label="Meditation playback controls" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <button id="med-play-btn"            class="primary" style="font-size:19px;padding:14px 28px;"  aria-label="Play meditation">&#9654; Play</button>
+    <button id="med-pause-btn"           style="font-size:19px;padding:14px 28px;display:none;"     aria-label="Pause">&#9646;&#9646; Pause</button>
+    <button id="med-skip-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Skip to next verse">Skip &#8250;</button>
+    <button id="med-prev-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Previous verse">&#8249; Previous</button>
+    <button id="med-stop-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Stop">&#9632; Stop</button>
+    <button id="med-restart-session-btn" style="font-size:18px;padding:12px 20px;"                  aria-label="Restart from verse 1">&#8634; Restart</button>
+  </div>
+
+  <!-- Setup panel — collapsed by default -->
+  <details id="med-setup-details" style="margin-top:8px;">
+    <summary style="font-size:17px;font-weight:700;color:#1b2c44;cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:8px;">
+      <span>&#9881;</span> Setup &amp; Generate Audio
+    </summary>
+    <div id="med-setup-group" style="margin-top:14px;">
+      <div id="med-key-section" style="margin-bottom:20px;">
+        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">OpenAI API key</h3>
+        <label for="med-api-key" style="font-weight:700;display:block;margin-bottom:6px;color:#1b2c44;">Paste your key (starts with sk-):</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" id="med-api-key" placeholder="sk-..." style="width:340px;font-size:17px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;background:#fff;color:#102045;" autocomplete="off" spellcheck="false" />
+          <button id="med-save-key-btn" class="primary">Save Key</button>
+          <button id="med-clear-key-btn">Clear Key</button>
+        </div>
+        <p id="med-key-status" style="font-size:15px;margin-top:8px;color:#1d7f43;font-weight:700;" aria-live="polite"></p>
+      </div>
+      <hr aria-hidden="true" style="margin:12px 0;" />
+      <div style="margin-bottom:20px;">
+        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">Voice</h3>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label for="med-voice-select" style="font-weight:700;color:#1b2c44;">Voice:</label>
+          <select id="med-voice-select" style="font-size:17px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;min-width:200px;">
+            <option value="nova">Nova — warm female (recommended)</option>
+            <option value="shimmer">Shimmer — calm female</option>
+            <option value="alloy">Alloy — neutral</option>
+            <option value="echo">Echo — male</option>
+            <option value="fable">Fable — warm British male</option>
+            <option value="onyx">Onyx — deep male</option>
+          </select>
+          <button id="med-test-voice-btn">Test voice</button>
+        </div>
+      </div>
+      <hr aria-hidden="true" style="margin:12px 0;" />
+      <div style="margin-bottom:8px;">
+        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">Generate audio (one-time)</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="med-generate-btn" class="primary" style="font-size:18px;padding:14px 24px;">Generate all verse audio</button>
+          <button id="med-generate-new-btn" style="font-size:18px;padding:14px 24px;display:none;">Generate new verses only</button>
+        </div>
+        <div id="med-gen-progress" style="margin-top:12px;display:none;">
+          <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="med-gen-progress-wrap" aria-label="Audio generation progress" style="height:18px;background:#d4c9b0;border-radius:9px;overflow:hidden;margin-bottom:8px;">
+            <div id="med-gen-progress-bar" style="height:100%;background:var(--navy);width:0%;transition:width 0.3s;border-radius:9px;"></div>
+          </div>
+          <p id="med-gen-status" aria-live="polite" style="font-size:16px;color:#1b2c44;font-weight:700;"></p>
+        </div>
+        <p id="med-cache-status" style="font-size:15px;color:#506070;margin-top:10px;" aria-live="polite"></p>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// MEDITATION MODE JAVASCRIPT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+var MED_KEY_STORE   = 'bible-med-openai-key';
+var MED_POS_STORE   = 'bible-med-position';
+var MED_TIMER_STORE = 'bible-med-timer';
+var MED_VOICE_STORE = 'bible-med-voice';
+var MED_AUDIO_DB    = 'bible-med-audio-v1';
+var MED_AUDIO_STORE = 'audio';
+
+// Ticker steps: 0, 10s, 20s, 30s, 40s, 50s, then 1-60 min (values in seconds)
+var MED_TICKER_STEPS = (function(){
+  var s=[0,10,20,30,40,50];
+  for(var m=1;m<=60;m++) s.push(m*60);
+  return s;
+})();
+var medTickerIdx = 6; // index 6 = 60s = 1 minute default
+
+function medTickerSeconds(){ return MED_TICKER_STEPS[medTickerIdx]; }
+function medTickerLabel(sec){
+  if(sec===0) return '0 — back to back';
+  if(sec<60) return sec+' sec';
+  var m=sec/60; return m===1?'1 min':m+' min';
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────────────
+var medPlaying        = false;
+var medPaused         = false;
+var medCurrentIdx     = 0;
+var medCountdownTimer = null;
+var medCurrentAudio   = null;   // currently playing <audio> element (natural voice)
+var medUtterance      = null;   // current SpeechSynthesisUtterance (web voice fallback)
+var medTimerMinutes   = 1;      // legacy compat
+
+// ── AudioContext keep-alive — activates iOS AVAudioSession ───────────────────
+// iOS only routes media button / AirPod events to the browser when an
+// AudioContext is running. We create one synchronously inside the Play button's
+// click handler (the only reliable way to unlock audio on iOS), then keep a
+// near-silent oscillator running whenever meditation is active.
+var medAudioCtx       = null;
+var medSilentOsc      = null;
+var medSilentGain     = null;
+
+// Called SYNCHRONOUSLY inside the Play button click — must not be deferred.
+function medUnlockAudioContext(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!medAudioCtx){
+      medAudioCtx = new AC();
+    }
+    if(medAudioCtx.state === 'suspended'){
+      medAudioCtx.resume();   // synchronous call — iOS requires this in gesture stack
+    }
+  }catch(e){}
+}
+
+function medStartSilentAudio(){
+  try{
+    if(!medAudioCtx) return;
+    if(medAudioCtx.state === 'suspended') medAudioCtx.resume();
+    if(medSilentOsc) return;  // already running
+    medSilentGain = medAudioCtx.createGain();
+    medSilentGain.gain.setValueAtTime(0.001, medAudioCtx.currentTime); // inaudible
+    medSilentGain.connect(medAudioCtx.destination);
+    medSilentOsc = medAudioCtx.createOscillator();
+    medSilentOsc.frequency.setValueAtTime(1, medAudioCtx.currentTime); // 1 Hz — inaudible
+    medSilentOsc.connect(medSilentGain);
+    medSilentOsc.start();
+  }catch(e){}
+}
+
+function medStopSilentAudio(){
+  try{
+    if(medSilentOsc){ medSilentOsc.stop(); medSilentOsc.disconnect(); medSilentOsc=null; }
+    if(medSilentGain){ medSilentGain.disconnect(); medSilentGain=null; }
+    if(medAudioCtx && medAudioCtx.state === 'running') medAudioCtx.suspend();
+  }catch(e){}
+}
+
+// ── Chime (Web Audio — no file needed) ────────────────────────────────────────────
+function playChime(frequency, duration, volume){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    var ctx = new AC();
+    var osc  = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency||528, ctx.currentTime);
+    gain.gain.setValueAtTime(volume||0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (duration||1.8));
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + (duration||1.8));
+    osc.onended = function(){ try{ ctx.close(); }catch(e){} };
+  }catch(e){}
+}
+// Warning chime at 10 sec: soft gentle bell
+function playWarningChime(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    var ctx = new AC();
+    var osc=ctx.createOscillator();
+    var gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type='sine';
+    osc.frequency.setValueAtTime(528, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime+0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+2.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+2.5);
+    osc.onended = function(){ try{ ctx.close(); }catch(e){} };
+  }catch(e){}
+}
+
+// ── Ticker (replaces spinner) ──────────────────────────────────────────────────────────────
+function medSetTicker(idx){
+  idx = Math.max(0, Math.min(MED_TICKER_STEPS.length-1, idx));
+  medTickerIdx = idx;
+  var sec = medTickerSeconds();
+  medTimerMinutes = sec/60; // keep legacy var in sync
+  var el = document.getElementById('med-timer-spinner');
+  if(el){
+    var lbl = medTickerLabel(sec);
+    el.textContent = lbl;
+    el.setAttribute('aria-valuenow', sec);
+    el.setAttribute('aria-valuetext', lbl);
+  }
+  try{ localStorage.setItem(MED_TIMER_STORE, String(sec)); }catch(e){}
+}
+function initSpinner(){
+  // Restore saved value (saved as seconds now)
+  try{
+    var saved=localStorage.getItem(MED_TIMER_STORE);
+    if(saved!==null){
+      var sec=parseInt(saved,10)||0;
+      var best=0;
+      MED_TICKER_STEPS.forEach(function(v,i){ if(v<=sec) best=i; });
+      medSetTicker(best);
+    } else { medSetTicker(medTickerIdx); }
+  }catch(e){ medSetTicker(medTickerIdx); }
+
+  var el = document.getElementById('med-timer-spinner');
+  if(!el) return;
+
+  // Keyboard: left/right arrows step through ticker (JAWS spinbutton)
+  el.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowUp'){ e.preventDefault(); medSetTicker(medTickerIdx+1); }
+    else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){ e.preventDefault(); medSetTicker(medTickerIdx-1); }
+    else if(e.key==='Home'){ e.preventDefault(); medSetTicker(0); }
+    else if(e.key==='End'){ e.preventDefault(); medSetTicker(MED_TICKER_STEPS.length-1); }
+  });
+  // Touch flick
+  var touchStartY=0;
+  el.addEventListener('touchstart',function(e){ touchStartY=e.touches[0].clientY; },{passive:true});
+  el.addEventListener('touchend',function(e){
+    var dy=touchStartY-e.changedTouches[0].clientY;
+    if(Math.abs(dy)>10){ medSetTicker(medTickerIdx+(dy>0?1:-1)); }
+  });
+  // Mouse wheel
+  el.addEventListener('wheel',function(e){
+    e.preventDefault();
+    medSetTicker(medTickerIdx+(e.deltaY<0?1:-1));
+  },{passive:false});
+
+}
+
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function saveMedPosition(idx){ try{ localStorage.setItem(MED_POS_STORE,String(idx)); }catch(e){} }
+function loadMedPosition(){ try{ var v=localStorage.getItem(MED_POS_STORE); return v!==null?parseInt(v,10):0; }catch(e){ return 0; } }
+
+function getMedApiKey(){ try{ return localStorage.getItem(MED_KEY_STORE)||''; }catch(e){ return ''; } }
+function saveMedApiKey(k){ try{ localStorage.setItem(MED_KEY_STORE,k); }catch(e){} }
+function clearMedApiKey(){ try{ localStorage.removeItem(MED_KEY_STORE); }catch(e){} }
+function getMedVoice(){ var s=document.getElementById('med-voice-select'); return s?s.value:'nova'; }
+function saveMedVoicePref(){ try{ localStorage.setItem(MED_VOICE_STORE,getMedVoice()); }catch(e){} }
+function loadMedVoicePref(){ try{ var v=localStorage.getItem(MED_VOICE_STORE); if(v){ var s=document.getElementById('med-voice-select'); if(s) s.value=v; } }catch(e){} }
+
+// ── IndexedDB audio cache ──────────────────────────────────────────────────────
+function openAudioDB(){
+  return new Promise(function(res,rej){
+    var req=indexedDB.open(MED_AUDIO_DB,1);
+    req.onupgradeneeded=function(e){ e.target.result.createObjectStore(MED_AUDIO_STORE); };
+    req.onsuccess=function(e){ res(e.target.result); };
+    req.onerror=function(){ rej(new Error('IndexedDB open failed')); };
+  });
+}
+function audioDB_get(db,key){
+  return new Promise(function(res,rej){
+    var tx=db.transaction(MED_AUDIO_STORE,'readonly');
+    var req=tx.objectStore(MED_AUDIO_STORE).get(key);
+    req.onsuccess=function(){ res(req.result||null); };
+    req.onerror=function(){ rej(); };
+  });
+}
+function audioDB_put(db,key,blob){
+  return new Promise(function(res,rej){
+    var tx=db.transaction(MED_AUDIO_STORE,'readwrite');
+    tx.objectStore(MED_AUDIO_STORE).put(blob,key);
+    tx.oncomplete=function(){ res(); };
+    tx.onerror=function(){ rej(); };
+  });
+}
+function audioDB_keys(db){
+  return new Promise(function(res,rej){
+    var tx=db.transaction(MED_AUDIO_STORE,'readonly');
+    var req=tx.objectStore(MED_AUDIO_STORE).getAllKeys();
+    req.onsuccess=function(){ res(req.result||[]); };
+    req.onerror=function(){ rej(); };
+  });
+}
+
+// ── OpenAI TTS ────────────────────────────────────────────────────────────────
+function fetchVerseAudio(apiKey,voice,text){
+  return fetch('https://api.openai.com/v1/audio/speech',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'tts-1',voice:voice,input:text,speed:0.88})
+  }).then(function(resp){
+    if(!resp.ok) return resp.json().then(function(e){ throw new Error((e.error&&e.error.message)||('HTTP '+resp.status)); });
+    return resp.blob();
+  });
+}
+
+// ── Cache status ──────────────────────────────────────────────────────────────
+function medUpdateCacheStatus(){
+  openAudioDB().then(function(db){
+    audioDB_keys(db).then(function(keys){
+      var verses=getMedVerseList(), cached=keys.length, total=verses.length;
+      var el=document.getElementById('med-cache-status'); if(!el) return;
+      if(cached===0) el.textContent='No audio cached. Press Generate all verse audio first.';
+      else if(cached<total){
+        el.textContent=cached+' of '+total+' verses cached.';
+        var nb=document.getElementById('med-generate-new-btn'); if(nb) nb.style.display='';
+      } else {
+        el.textContent='All '+total+' verses cached and ready.';
+        var nb=document.getElementById('med-generate-new-btn'); if(nb) nb.style.display='';
+      }
+    });
+  }).catch(function(){});
+}
+
+// ── Generate audio ────────────────────────────────────────────────────────────
+async function medGenerateAudio(newOnly){
+  var apiKey=getMedApiKey();
+  if(!apiKey||!apiKey.startsWith('sk-')){
+    announce('Please save a valid OpenAI API key first.');
+    var st=document.getElementById('med-key-status');
+    if(st){ st.textContent='Please enter and save your API key first.'; st.style.color='#9b111e'; }
+    var ki=document.getElementById('med-api-key'); if(ki) ki.focus();
+    return;
+  }
+  var verses=getMedVerseList(), voice=getMedVoice();
+  var genBtn=document.getElementById('med-generate-btn'), newBtn=document.getElementById('med-generate-new-btn');
+  var progWrap=document.getElementById('med-gen-progress'), progBar=document.getElementById('med-gen-progress-bar');
+  var progEl=document.getElementById('med-gen-progress-wrap'), statusEl=document.getElementById('med-gen-status');
+  if(genBtn) genBtn.disabled=true; if(newBtn) newBtn.disabled=true;
+  if(progWrap) progWrap.style.display=''; if(statusEl) statusEl.textContent='Opening audio cache…';
+  var db; try{ db=await openAudioDB(); }
+  catch(e){ if(statusEl) statusEl.textContent='Could not open cache: '+e.message; if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false; return; }
+  var existingKeys=[]; if(newOnly){ try{ existingKeys=await audioDB_keys(db); }catch(e){} }
+  var toGen=newOnly?verses.filter(function(v){ return existingKeys.indexOf(v.ref)<0; }):verses;
+  if(!toGen.length){ if(statusEl) statusEl.textContent='All audio already cached.'; if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false; medUpdateCacheStatus(); return; }
+  var done=0, errors=[];
+  for(var i=0;i<toGen.length;i++){
+    var v=toGen[i];
+    if(statusEl) statusEl.textContent='Generating '+(i+1)+' of '+toGen.length+': '+v.ref+'…';
+    if(i===0||i%10===0) announce('Generating verse '+(i+1)+' of '+toGen.length);
+    try{
+      var blob=await fetchVerseAudio(apiKey,voice,spokenRef(v.ref)+'. '+v.text);
+      await audioDB_put(db,v.ref,blob); done++;
+    }catch(err){ errors.push(v.ref+': '+err.message); }
+    var pct=Math.round(((i+1)/toGen.length)*100);
+    if(progBar) progBar.style.width=pct+'%'; if(progEl) progEl.setAttribute('aria-valuenow',pct);
+    if(i<toGen.length-1) await new Promise(function(r){ setTimeout(r,300); });
+  }
+  if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false;
+  if(errors.length){ if(statusEl){ statusEl.textContent=done+' done, '+errors.length+' failed: '+errors.join('; '); statusEl.style.color='#9b111e'; } }
+  else{ if(statusEl){ statusEl.textContent='Done! All '+done+' verses cached.'; statusEl.style.color='#1d7f43'; } announce('Done. '+done+' verses ready.'); }
+  medUpdateCacheStatus();
+}
+
+function getMedVerseList(){
+  return Object.keys(VERSES).map(function(ref){ return {ref:ref,text:VERSES[ref]}; });
+}
+function spokenRef(ref){
+  return ref.replace(/(\d+):(\d+)-(\d+)/g,'$1, verses $2 through $3').replace(/(\d+):(\d+)/g,'$1, verse $2');
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function medSetStatus(msg){
+  var el=document.getElementById('med-status-combined'); if(el) el.textContent=msg;
+}
+function medSetCountdown(txt){
+  var el=document.getElementById('med-countdown-lbl'); if(el) el.textContent=txt;
+}
+function medShowVerse(ref,text){
+  document.getElementById('med-verse-ref').textContent  = ref||'—';
+  document.getElementById('med-verse-text').textContent = text||'';
+}
+
+// Show only the buttons relevant to current state
+// states: 'idle' | 'playing' | 'paused' | 'reflecting' | 'done'
+function medSetButtons(state){
+  var play    = document.getElementById('med-play-btn');
+  var pause   = document.getElementById('med-pause-btn');
+  var skip    = document.getElementById('med-skip-btn');
+  var prev    = document.getElementById('med-prev-btn');
+  var stop    = document.getElementById('med-stop-btn');
+  var restart = document.getElementById('med-restart-session-btn');
+  var show = function(el,vis){ if(el) el.style.display=vis?'':'none'; };
+
+  show(play,    state==='idle'||state==='paused'||state==='done');
+  show(pause,   state==='playing'||state==='reflecting');
+  show(skip,    state==='playing'||state==='paused'||state==='reflecting');
+  show(prev,    state==='playing'||state==='paused'||state==='reflecting');
+  show(stop,    state==='playing'||state==='paused'||state==='reflecting');
+  show(restart, true); // always visible
+}
+
+// ── Media Session ─────────────────────────────────────────────────────────────
+function medUpdateMediaSession(ref,text){
+  if(!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: ref||'Bible Meditation',
+    artist: 'Bible Verse Meditation',
+    album: text?text.substring(0,80):''
+  });
+}
+
+// ── Release a natural voice audio element safely ───────────────────────────
+function medReleaseAudio(audio){
+  if(!audio) return;
+  try{ audio.pause(); audio.onended=null; audio.onerror=null; }catch(e){}
+  if(audio._blobUrl){ try{ URL.revokeObjectURL(audio._blobUrl); }catch(e){} audio._blobUrl=null; }
+}
+
+// ── Play verse at index — natural voice first, web speech fallback ─────────
+// No pre-loading: fetch blob fresh each time from IndexedDB.
+// This eliminates the race condition that caused verse 3+ to fail.
+// The silent oscillator bridges the gap between verses so iOS keeps the
+// audio session alive through the reflection countdown.
+async function medPlayVerseAtIndex(idx){
+  var verses=getMedVerseList();
+  if(idx<0||idx>=verses.length) return;
+  var v=verses[idx];
+
+  // Stop whatever was playing
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+
+  medCurrentIdx=idx; saveMedPosition(idx);
+  medShowVerse(v.ref,v.text);
+  medSetStatus('Playing verse '+(idx+1)+' of '+verses.length+': '+v.ref);
+  medSetCountdown('');
+  medSetButtons('playing');
+  announce('Now playing: '+v.ref);
+  medUpdateMediaSession(v.ref,v.text);
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
+
+  // ── Try natural voice (IndexedDB cache) ───────────────────────────────────
+  var blob = null;
+  try{
+    var db = await openAudioDB();
+    blob = await audioDB_get(db, v.ref);
+  }catch(e){ blob=null; }
+
+  if(blob){
+    // Natural voice path — real <audio> element, activates iOS AVAudioSession
+    medStopSilentAudio(); // real audio takes over, oscillator not needed while playing
+    var url = URL.createObjectURL(blob);
+    var audio = new Audio(url);
+    audio._blobUrl = url;
+    medCurrentAudio = audio;
+
+    audio.onended = function(){
+      medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+      if(medPlaying&&!medPaused){
+        medStartSilentAudio(); // bridge the gap during countdown
+        medAdvanceAfterDelay();
+      }
+    };
+    audio.onerror = function(){
+      medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+      if(medPlaying&&!medPaused) medPlayVerseAtIndexWebSpeech(idx); // fallback
+    };
+
+    var p=audio.play();
+    if(p&&typeof p.catch==='function'){
+      p.catch(function(){
+        // iOS blocked play — try resuming AudioContext then retry
+        if(medAudioCtx&&medAudioCtx.state==='suspended'){
+          medAudioCtx.resume().then(function(){ audio.play().catch(function(){
+            medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+            medPlayVerseAtIndexWebSpeech(idx);
+          }); });
+        } else {
+          medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+          medPlayVerseAtIndexWebSpeech(idx);
+        }
+      });
+    }
+    return;
+  }
+
+  // ── Web Speech fallback (no cache) ────────────────────────────────────────
+  medPlayVerseAtIndexWebSpeech(idx);
+}
+
+function medPlayVerseAtIndexWebSpeech(idx){
+  var verses=getMedVerseList();
+  if(idx<0||idx>=verses.length) return;
+  var v=verses[idx];
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(spokenRef(v.ref)+'. '+v.text);
+  var voice=getBestVoice(); if(voice) u.voice=voice;
+  u.rate=getSpeechRate(); u.pitch=1; u.volume=1;
+  u.onend=function(){
+    medUtterance=null;
+    if(medPlaying&&!medPaused) medAdvanceAfterDelay();
+  };
+  u.onerror=function(){
+    medUtterance=null;
+    if(medPlaying&&!medPaused) medAdvanceAfterDelay();
+  };
+  medUtterance=u;
+  try{ window.speechSynthesis.speak(u); }catch(e){ if(medPlaying&&!medPaused) medAdvanceAfterDelay(); }
+}
+
+// ── Countdown ─────────────────────────────────────────────────────────────────
+// Stores end timestamp; corrects drift on every tick after screen wakes
+function medStartCountdown(totalSec, onComplete){
+  if(totalSec<=0){ onComplete(); return; }
+  var endTS=Date.now()+(totalSec*1000);
+  var chimed10=false;
+
+  medSetButtons('reflecting');
+  medSetStatus('Reflecting…');
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
+
+  function tick(){
+    if(!medPlaying||medPaused){ return; }
+    var remaining=Math.ceil((endTS-Date.now())/1000);
+    if(remaining<=0){ medSetCountdown(''); onComplete(); return; }
+
+    var m=Math.floor(remaining/60), s=remaining%60;
+    var display=m>0?m+' min '+(s<10?'0':'')+s+' sec':s+' sec';
+    medSetCountdown('Reflecting: '+display+' remaining');
+
+    // Chime at 10 seconds (only when reflection time is 1 minute or more)
+    if(remaining<=10&&!chimed10&&totalSec>=60){ chimed10=true; playWarningChime(); }
+
+    medCountdownTimer=setTimeout(tick,500);
+  }
+  tick();
+}
+
+
+function medAdvanceAfterDelay(){
+  var totalSec=medTickerSeconds();
+  medStartCountdown(totalSec, function(){
+    medNextVerse();
+  });
+}
+
+function medNextVerse(){
+  var verses=getMedVerseList();
+  var next=medCurrentIdx+1;
+  if(next>=verses.length){
+    medSetStatus('All verses complete. Well done!');
+    medSetCountdown('');
+    announce('All verses read. Session complete.');
+    if('mediaSession' in navigator) navigator.mediaSession.playbackState='none';
+    medSetButtons('done');
+    medPlaying=false; medPaused=false;
+    medCurrentIdx=0; saveMedPosition(0);
+    return;
+  }
+  medPlayVerseAtIndex(next);
+}
+
+// ── Focus helper — keeps JAWS on the right button ────────────────────────────
+function medFocusPlayPause(){
+  setTimeout(function(){
+    var btn=document.getElementById(medPlaying?'med-pause-btn':'med-play-btn');
+    if(btn && btn.style.display!=='none') btn.focus();
+  },50);
+}
+function medPlay(){
+  if(medPaused){
+    medPaused=false; medPlaying=true;
+    medStartSilentAudio();
+    medSetButtons('playing');
+    if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
+    announce('Resumed.');
+    // Was paused during countdown — restart countdown from current verse
+    medAdvanceAfterDelay();
+    medFocusPlayPause();
+    return;
+  }
+  medPlaying=true; medPaused=false;
+  medStartSilentAudio();
+  var saved=loadMedPosition();
+  var verses=getMedVerseList();
+  if(saved>=verses.length) saved=0;
+  medPlayVerseAtIndex(saved);
+  medFocusPlayPause();
+}
+
+function medPause(){
+  if(!medPlaying&&!medPaused) return;
+  medPaused=true; medPlaying=false;
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medStopSilentAudio();
+  medSetButtons('paused');
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
+  medSetStatus('Paused — press Play or Space to resume');
+  announce('Paused.');
+  medFocusPlayPause();
+}
+
+function medStop(){
+  medPlaying=false; medPaused=false;
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medStopSilentAudio();
+  medSetButtons('idle');
+  medSetCountdown('');
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='none';
+  medSetStatus('Stopped');
+}
+
+function medSkip(){
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medSetCountdown('');
+  var verses=getMedVerseList();
+  var next=Math.min(medCurrentIdx+1,verses.length-1);
+  if(medPlaying||medPaused){
+    medPaused=false; medPlaying=true;
+    medPlayVerseAtIndex(next);
+    medFocusPlayPause();
+  } else {
+    medCurrentIdx=next; saveMedPosition(next);
+    medShowVerse(verses[next].ref,verses[next].text);
+    medSetStatus('Verse '+(next+1)+' of '+verses.length+': '+verses[next].ref+' — press Play');
+    announce('Skipped to '+verses[next].ref);
+  }
+}
+
+function medPrev(){
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medSetCountdown('');
+  var verses=getMedVerseList();
+  var prev=Math.max(medCurrentIdx-1,0);
+  if(medPlaying||medPaused){
+    medPaused=false; medPlaying=true;
+    medPlayVerseAtIndex(prev);
+    medFocusPlayPause();
+  } else {
+    medCurrentIdx=prev; saveMedPosition(prev);
+    medShowVerse(verses[prev].ref,verses[prev].text);
+    medSetStatus('Verse '+(prev+1)+' of '+verses.length+': '+verses[prev].ref+' — press Play');
+    announce('Moved to '+verses[prev].ref);
+  }
+}
+
+function medRestartSession(){
+  medStop(); medCurrentIdx=0; saveMedPosition(0);
+  var verses=getMedVerseList();
+  if(verses.length){ medShowVerse(verses[0].ref,verses[0].text); }
+  medSetStatus('Ready — press Play to start from '+(verses[0]?verses[0].ref:'verse 1'));
+  announce('Restarted. Press Play to begin from '+(verses[0]?verses[0].ref:'verse 1')+'.');
+}
+
+// ── Setup panel button wiring ─────────────────────────────────────────────────
+document.getElementById('med-save-key-btn').addEventListener('click',function(){
+  var val=document.getElementById('med-api-key').value.trim();
+  var st=document.getElementById('med-key-status');
+  if(!val){ st.textContent='Please enter your API key.'; st.style.color='#9b111e'; announce('Please enter your API key.'); return; }
+  if(!val.startsWith('sk-')){ st.textContent='Key should start with sk-'; st.style.color='#9b111e'; announce('Invalid key format.'); return; }
+  saveMedApiKey(val); document.getElementById('med-api-key').value='';
+  st.textContent='API key saved in this browser.'; st.style.color='#1d7f43';
+  announce('API key saved.'); medUpdateCacheStatus();
+});
+document.getElementById('med-clear-key-btn').addEventListener('click',function(){
+  clearMedApiKey(); document.getElementById('med-api-key').value='';
+  var st=document.getElementById('med-key-status');
+  st.textContent='Key cleared.'; st.style.color='#506070'; announce('API key cleared.');
+});
+document.getElementById('med-test-voice-btn').addEventListener('click',async function(){
+  medUnlockAudioContext();
+  var apiKey=getMedApiKey();
+  if(!apiKey){ announce('Please save your API key first.'); return; }
+  var voice=getMedVoice(); saveMedVoicePref(); announce('Testing voice '+voice+'…');
+  try{
+    var blob=await fetchVerseAudio(apiKey,voice,'The LORD is my shepherd. I shall not be in want. Psalm 23, verse 1.');
+    var url=URL.createObjectURL(blob);
+    var a=new Audio(url); a.onended=function(){ URL.revokeObjectURL(url); }; a.play();
+  }catch(err){
+    announce('Voice test failed: '+err.message);
+    var st=document.getElementById('med-key-status');
+    st.textContent='Voice test failed: '+err.message; st.style.color='#9b111e';
+  }
+});
+document.getElementById('med-generate-btn').addEventListener('click',function(){ saveMedVoicePref(); medGenerateAudio(false); });
+document.getElementById('med-generate-new-btn').addEventListener('click',function(){ saveMedVoicePref(); medGenerateAudio(true); });
+document.getElementById('med-voice-select').addEventListener('change',saveMedVoicePref);
+document.getElementById('med-play-btn').addEventListener('click',function(){
+  medUnlockAudioContext();  // must be synchronous in gesture handler for iOS
+  medPlay();
+});
+document.getElementById('med-pause-btn').addEventListener('click',medPause);
+document.getElementById('med-skip-btn').addEventListener('click',medSkip);
+document.getElementById('med-prev-btn').addEventListener('click',medPrev);
+document.getElementById('med-stop-btn').addEventListener('click',function(){ medStop(); announce('Stopped.'); });
+document.getElementById('med-restart-session-btn').addEventListener('click',medRestartSession);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function initMeditation(){
+  loadMedVoicePref();
+  initSpinner();
+  var existingKey=getMedApiKey();
+  var st=document.getElementById('med-key-status');
+  if(existingKey&&st){ st.textContent='API key is saved in this browser.'; st.style.color='#1d7f43'; }
+  var verses=getMedVerseList();
+  var saved=loadMedPosition();
+  if(saved>=verses.length) saved=0;
+  medCurrentIdx=saved;
+  if(verses.length){ medShowVerse(verses[saved].ref,verses[saved].text); }
+  medSetStatus('Verse '+(saved+1)+' of '+verses.length+' — press Play to begin from '+(verses[saved]?verses[saved].ref:'first verse'));
+  medSetButtons('idle');
+  medUpdateCacheStatus();
+  if('mediaSession' in navigator){
+    navigator.mediaSession.setActionHandler('play',          medPlay);
+    navigator.mediaSession.setActionHandler('pause',         medPause);
+    navigator.mediaSession.setActionHandler('stop',          medStop);
+    navigator.mediaSession.setActionHandler('nexttrack',     medSkip);
+    navigator.mediaSession.setActionHandler('previoustrack', medPrev);
+    // Some headphone firmware fires seekforward/seekbackward for 2×/3× clicks
+    try{ navigator.mediaSession.setActionHandler('seekforward',  medSkip); }catch(e){}
+    try{ navigator.mediaSession.setActionHandler('seekbackward', medPrev); }catch(e){}
+  }
+})();
+</script>
+
+
+<!-- VERSE SELECTION -->
+<div class="section">
+  <h2 id="add-verse-heading">Add your own verse</h2>
+  <p id="add-verse-desc" style="font-size:14px;color:#555;margin-bottom:10px">Type or paste a verse reference and text, then press Save. It will be added to the verse list for future practice.</p>
+  <p id="edit-verse-notice" style="font-size:14px;font-weight:700;color:#9b111e;margin-bottom:10px;display:none;" aria-live="polite"></p>
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:560px;">
+    <div>
+      <label for="custom-ref-input" style="font-weight:700;display:block;margin-bottom:4px;">Verse reference (e.g. John 3:16):</label>
+      <input type="text" id="custom-ref-input" autocomplete="off" spellcheck="false" style="width:100%;max-width:320px;" placeholder="e.g. John 3:16" />
+    </div>
+    <div>
+      <label for="custom-text-input" style="font-weight:700;display:block;margin-bottom:4px;">Verse text (type or paste):</label>
+      <textarea id="custom-text-input" rows="4" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Paste or type the verse text here"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="primary" id="save-verse-btn">Save verse</button>
+      <button id="cancel-edit-btn" style="display:none;">Cancel edit</button>
+    </div>
+  </div>
+
+  <hr style="margin:16px 0 14px;" />
+  <h2>Choose a verse</h2>
+  <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px">
+    <div>
+      <label id="vlist-label" for="vlist-btn" class="sr-only">Choose from verse list</label>
+      <button type="button" id="vlist-btn"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-labelledby="vlist-btn-text"
+        style="width:320px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span id="vlist-btn-text">Or choose from the verse list</span>
+        <span aria-hidden="true">&#9660;</span>
+      </button>
+      <select id="verse-select" aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;">
+        <option value="">Choose a verse</option>
+      </select>
+      <ul id="vlist-listbox"
+        role="listbox"
+        aria-label="Bible verse list"
+        tabindex="-1"
+        style="display:none;position:absolute;z-index:999;left:0;top:100%;width:320px;max-height:260px;overflow-y:auto;background:#fff;border:2px solid var(--primary);border-radius:10px;margin:2px 0 0 0;padding:4px 0;list-style:none;box-shadow:0 6px 24px rgba(0,0,0,.18);">
+      </ul>
+    </div>
+    <button id="random-btn">Random verse</button>
+    <button id="check-excel-btn">Import Bible.xlsm</button>
+    <button id="reimport-btn" style="display:none">Re-import Bible.xlsm</button>
+    <input type="file" id="excel-file" accept=".xlsx,.xls,.xlsm,.csv" style="display:none" aria-label="Choose Bible.xlsm workbook" />
+  </div>
+
+  <p id="verse-status" class="status-txt" style="margin-top:12px;">Choose from the list or add your own verse above.</p>
+  <p id="verse-error" class="error-txt" style="display:none"></p>
+  <hr />
+  <h2>Game mode</h2>
+  <div class="radio-group" role="radiogroup" aria-labelledby="mode-lbl">
+    <p id="mode-lbl" style="font-weight:bold;margin-bottom:8px">Select a mode:</p>
+    <label><input type="radio" name="mode" value="chunk" checked />Phrase Builder</label>
+    <label><input type="radio" name="mode" value="firstletter" />First letter fill-in</label>
+    <label><input type="radio" name="mode" value="scramble" />Word scramble</label>
+    <label><input type="radio" name="mode" value="cloze" />Missing word fill-in</label>
+    <label><input type="radio" name="mode" value="multiplechoice" />Multiple choice</label>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="section" id="game-section" aria-labelledby="game-heading">
+  <h2 id="game-heading">Game</h2>
+  <p id="game-desc" style="color:#444;font-size:15px;margin-bottom:14px"></p>
+
+  <div id="scramble-section">
+    <h3 id="bank-heading" aria-hidden="true">Word bank</h3>
+    <p aria-hidden="true" style="font-size:14px;color:#555;margin-bottom:6px">
+      Arrow keys move between words. Enter or Space selects the focused word.
+      Tab moves to answer slots. Delete or Backspace on a filled slot returns it to the bank.
+    </p>
+    <div style="margin-bottom:10px;">
+      <button id="scramble-read-toggle-btn" class="small" aria-pressed="false">Read verse so far: Off</button>
+    </div>
+    <div id="word-bank-container"
+         role="application"
+         aria-label="Word bank"
+         tabindex="0"
+         style="border:2px solid #8a9ab0;border-radius:14px;padding:14px;min-height:72px;background:#f8fbff;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;cursor:default;">
+    </div>
+    <h3 id="slots-heading" aria-hidden="true">Your answer slots</h3>
+    <p aria-hidden="true" style="font-size:14px;color:#555;margin-bottom:6px">
+      Slots fill left to right. Next slot has a thick blue border.
+      Shift+Tab returns to word bank. Tab moves to buttons.
+    </p>
+    <div id="scramble-progress-wrap" class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Scramble progress">
+      <div id="scramble-progress-bar" class="progress-bar" style="width:0%"></div>
+    </div>
+    <div id="answer-slots-container" role="group" aria-label="Answer slots"></div>
+    <div style="margin-top:8px;">
+      <button id="undo-word-btn" class="small" style="display:none">Undo last word</button>
+    </div>
+  </div>
+
+  <div id="fill-section" style="display:none">
+    <p style="font-size:14px;color:#555;margin-bottom:10px">
+      Type the correct word letter by letter. Wrong letters are rejected immediately and buzz.
+      Correct words lock green and the cursor advances. After each correct word JAWS reads the verse so far.
+    </p>
+    <div id="fill-progress-wrap" class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Fill-in progress">
+      <div id="fill-progress-bar" class="progress-bar" style="width:0%"></div>
+    </div>
+    <div id="fill-grid" role="group" aria-label="Fill in each word of the verse"></div>
+  </div>
+
+  <div id="chunk-section" style="display:none">
+    <p style="font-size:14px;color:#555;margin-bottom:10px">
+      Learn the verse in short phrase chunks. Press Hear phrase, then type the phrase. Wrong letters are rejected immediately. When the phrase is correct, the app moves to the next phrase automatically.
+    </p>
+    <div style="margin-bottom:10px">
+      <button id="chunk-read-toggle-btn" class="small" aria-pressed="false">Read verse so far: Off</button>
+    </div>
+    <div class="chunk-box" role="group" aria-label="Phrase Builder memorization area" style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <div id="chunk-current" class="chunk-current"></div>
+        <div id="chunk-hint" class="chunk-hint"></div>
+        <div style="margin-bottom:10px">
+          <button id="hear-chunk-btn">Hear phrase</button>
+        </div>
+        <label for="chunk-answer">Type this phrase:</label>
+        <input type="text" id="chunk-answer" class="chunk-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+      </div>
+      <div id="chunk-sofar-panel" style="display:none;flex:1;min-width:200px;max-width:420px;background:var(--cream-dark);border:2px solid #c8b87a;border-radius:12px;padding:14px;">
+        <div style="font-size:13px;font-weight:700;color:#506070;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;" aria-hidden="true">Verse so far</div>
+        <div id="chunk-sofar-text"
+          tabindex="0"
+          aria-label="Verse so far"
+          style="font-family:'Playfair Display',serif;font-size:18px;line-height:1.7;color:#102045;border-radius:8px;outline-offset:3px;"
+          onfocus="this.style.outline='4px solid #ffbf47'" onblur="this.style.outline='none'"></div>
+      </div>
+    </div>
+    <div id="chunk-progress" class="status-txt"></div>
+  </div>
+
+  <div id="cloze-section" style="display:none">
+    <p style="font-size:14px;color:#555;margin-bottom:10px">
+      Several words in the verse are hidden. Type each missing word in the blank. Wrong letters are rejected and buzz. Correct words lock green and the cursor advances.
+    </p>
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <button id="cloze-hear-btn" style="background:var(--navy);color:var(--gold-light);border-color:var(--navy);font-size:18px;padding:10px 20px;">Hear this blank</button>
+      <span id="cloze-progress-txt" style="font-size:16px;color:#20354f;font-weight:700;" aria-live="assertive" aria-atomic="true"></span>
+    </div>
+    <div id="cloze-progress-wrap" class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Missing word progress">
+      <div id="cloze-progress-bar" class="progress-bar" style="width:0%"></div>
+    </div>
+    <p id="cloze-progress-lbl" class="status-txt"></p>
+    <div id="cloze-verse" class="cloze-verse" aria-label="Verse with blanks for missing words"></div>
+  </div>
+
+  <div id="mc-section" style="display:none">
+    <p style="font-size:14px;color:#555;margin-bottom:10px">
+      For each position in the verse, four word choices are shown. Press 1, 2, 3, or 4 on the keyboard to pick that choice, or press the first letter of a word to jump focus to it. Tab to a button and press Enter or Space also works. Correct answers lock in place; wrong answers buzz.
+    </p>
+    <div id="mc-verse-display" class="mc-verse-display"></div>
+    <p id="mc-progress" class="mc-progress"></p>
+    <div id="mc-progress-wrap" class="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Multiple choice progress">
+      <div id="mc-progress-bar" class="progress-bar" style="width:0%"></div>
+    </div>
+    <p id="mc-word-label" class="mc-word-label"></p>
+    <div id="mc-choices" class="mc-choices" role="group" aria-label="Choose the correct word"></div>
+  </div>
+
+  <div id="feedback" role="alert"></div>
+
+  <div style="margin-top:16px">
+    <button id="loop-btn">Start loop verse audio</button>
+    <button id="stop-loop-btn">Stop loop audio</button>
+    <button id="restart-btn">Restart this verse</button>
+    <button id="new-verse-btn">New verse</button>
+  </div>
+  <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label for="voice-select" style="font-weight:700;margin-bottom:0;">Speech voice:</label>
+    <select id="voice-select" style="width:auto;min-width:220px;" aria-describedby="voice-select-help"></select>
+    <span id="voice-count-lbl" aria-live="polite" style="font-size:15px;color:#506070;"></span>
+    <button id="voice-test-btn" class="small">Test voice</button>
+    <button id="voice-reload-btn" class="small">Reload voices</button>
+    <p id="voice-select-help" class="sr-only">Choose which voice speaks the verses. Press Test voice to hear a preview. On iPhone or iPad, press Test voice first and then Reload voices to unlock the full voice list. If the list is empty or missing voices press Reload voices.</p>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label for="rate-select" style="font-weight:700;margin-bottom:0;">Speech rate:</label>
+    <select id="rate-select" style="width:auto;min-width:160px;" aria-describedby="rate-select-help">
+      <option value="0.6">Very slow</option>
+      <option value="0.75">Slow</option>
+      <option value="0.92" selected>Normal</option>
+      <option value="1.1">Fast</option>
+      <option value="1.3">Very fast</option>
+    </select>
+    <p id="rate-select-help" class="sr-only">Choose how fast the voice reads verses.</p>
+  </div>
+</div>
+
+<!-- MEMORIZED -->
+<div class="section" id="mem-section">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+    <h2 style="margin:0;">Memorized verses</h2>
+    <button id="mem-toggle-btn" class="primary" style="min-width:200px;"
+      aria-expanded="false" aria-controls="mem-collapsible">
+      Show memorized verses
+    </button>
+  </div>
+  <p style="font-size:16px;color:#506070;margin-top:8px;margin-bottom:14px;line-height:1.6;">Verses appear here automatically when you complete a game correctly. You can play them back one at a time using the practice buttons next to each verse, or press <strong>Play all verses</strong> to hear them read aloud in sequence. Press <strong>Remove</strong> to take a verse off the list when you no longer need it here.</p>
+  <div style="margin-bottom:14px;">
+    <button id="play-all-btn">Play all verses</button>
+    <button id="stop-all-btn">Stop playback</button>
+  </div>
+  <p id="play-all-status" class="status-txt" aria-live="polite" aria-atomic="true" style="display:none"></p>
+  <div id="mem-collapsible" style="display:none;">
+    <p id="mem-empty" style="color:#555">No verses memorized yet. Complete a game correctly to add one here.</p>
+    <ul id="memorized-list" aria-label="Your memorized verses list"></ul>
+  </div>
+</div>
+
+<!-- MANAGE VERSES -->
+<div class="section" id="manage-section">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+    <h2 style="margin:0;">Manage verses (Edit or Delete)</h2>
+    <button id="manage-toggle-btn" class="primary" style="min-width:200px;"
+      aria-expanded="false" aria-controls="manage-verse-body">
+      Show verse manager
+    </button>
+  </div>
+  <p style="font-size:15px;color:#506070;margin-top:6px;margin-bottom:0;">
+    Edit or delete any verse from the list — including built-in verses. Changes are saved locally on your device.
+  </p>
+  <div id="manage-verse-body" style="display:none;margin-top:16px;">
+    <div id="manage-verse-list" aria-label="Manage verses list"
+      style="max-height:400px;overflow-y:auto;border:1px solid #d4c9b0;border-radius:12px;padding:10px;background:#f8fbff;">
+    </div>
+    <p id="manage-verse-empty" style="font-size:15px;color:#555;display:none;">No verses available.</p>
+  </div>
+</div>
+
+<script>
+var VERSES = {
+  "Joshua 1:9": "Have I not commanded you Be strong and courageous Do not be terrified do not be discouraged for the LORD your God will be with you wherever you go",
+  "1 Chronicles 29:11": "Yours O LORD is the greatness and the power and the glory and the majesty and the splendor for everything in heaven and earth is yours Yours O LORD is the kingdom you are exalted as head over all",
+  "1 Chronicles 29:12": "Wealth and honor come from you you are the ruler of all things In your hands are strength and power to exalt and give strength to all",
+  "Psalm 1:1": "Blessed is the man who does not walk in the counsel of the wicked or stand in the way of sinners or sit in the seat of mockers",
+  "Psalm 1:2": "But his delight is in the law of the LORD and on his law he meditates day and night",
+  "Psalm 1:3": "He is like a tree planted by streams of water which yields its fruit in season and whose leaf does not wither Whatever he does prospers",
+  "Psalm 5:3": "In the morning O LORD you hear my voice in the morning I lay my requests before you and wait in expectation",
+  "Psalm 23:1": "The LORD is my shepherd I shall not be in want",
+  "Psalm 23:2": "He makes me lie down in green pastures he leads me beside quiet waters",
+  "Psalm 23:3": "he restores my soul He guides me in paths of righteousness for his names sake",
+  "Psalm 23:4": "Even though I walk through the valley of the shadow of death I will fear no evil for you are with me your rod and your staff they comfort me",
+  "Psalm 23:5": "You prepare a table before me in the presence of my enemies You anoint my head with oil my cup overflows",
+  "Psalm 23:6": "Surely goodness and love will follow me all the days of my life and I will dwell in the house of the LORD forever",
+  "Psalm 37:4": "Delight yourself in the LORD and he will give you the desires of your heart",
+  "Psalm 93:1": "The LORD reigns he is robed in majesty the LORD is robed in majesty and is armed with strength The world is firmly established it cannot be moved",
+  "Psalm 93:2": "Your throne was established long ago you are from all eternity",
+  "Psalm 93:3": "The seas have lifted up O LORD the seas have lifted up their voice the seas have lifted up their pounding waves",
+  "Psalm 93:4": "Mightier than the thunder of the great waters mightier than the breakers of the sea the LORD on high is mighty",
+  "Psalm 93:5": "Your statutes stand firm holiness adorns your house for endless days O LORD",
+  "Proverbs 3:5": "Trust in the LORD with all your heart and lean not on your own understanding",
+  "Proverbs 3:6": "in all your ways acknowledge him and he will make your paths straight",
+  "Proverbs 9:10": "The fear of the LORD is the beginning of wisdom and knowledge of the Holy One is understanding",
+  "Proverbs 15:1": "A gentle answer turns away wrath but a harsh word stirs up anger",
+  "Proverbs 16:3": "Commit to the LORD whatever you do and your plans will succeed",
+  "Proverbs 19:11": "A mans wisdom gives him patience it is to his glory to overlook an offense",
+  "Isaiah 41:10": "So do not fear for I am with you do not be dismayed for I am your God I will strengthen you and help you I will uphold you with my righteous right hand",
+  "Isaiah 55:8": "For my thoughts are not your thoughts neither are your ways my ways declares the LORD",
+  "Isaiah 55:9": "As the heavens are higher than the earth so are my ways higher than your ways and my thoughts than your thoughts",
+  "Matthew 5:37": "Simply let your Yes be Yes and your NoNo anything beyond this comes from the evil one",
+  "Matthew 5:44": "But I tell you Love your enemies and pray for those who persecute you",
+  "Matthew 11:28": "Come to me all you who are weary and burdened and I will give you rest",
+  "Matthew 11:29": "Take my yoke upon you and learn from me for I am gentle and humble in heart and you will find rest for your souls",
+  "Matthew 11:30": "For my yoke is easy and my burden is light",
+  "Matthew 16:25": "For whoever wants to save his life will lose it but whoever loses his life for me will find it",
+  "Mark 12:30": "Love the Lord your God with all your heart and with all your soul and with all your mind and with all your strength",
+  "Mark 12:31": "The second is this Love your neighbor as yourself There is no commandment greater than these",
+  "Luke 16:11": "Therefore if you have not been faithful in the use of worldly wealth who will entrust the true riches to you",
+  "John 3:16": "For God so loved the world that he gave his one and only Son that whoever believes in him shall not perish but have eternal life",
+  "John 13:34": "A new command I give you Love one another As I have loved you so you must love one another",
+  "John 13:35": "By this all men will know that you are my disciples if you love one another",
+  "John 14:6": "Jesus answered I am the way and the truth and the life No one comes to the Father except through me",
+  "Romans 8:28": "And we know that in all things God works for the good of those who love him who have been called according to his purpose",
+  "1 Corinthians 13:1": "If I speak in the tongues of men and of angels but have not love I am only a resounding gong or a clanging cymbal",
+  "1 Corinthians 13:2": "If I have the gift of prophecy and can fathom all mysteries and all knowledge and if I have a faith that can move mountains but have not love I am nothing",
+  "1 Corinthians 13:3": "If I give all I possess to the poor and surrender my body to the flames but have not love I gain nothing",
+  "1 Corinthians 13:4": "Love is patient love is kind It does not envy it does not boast it is not proud",
+  "1 Corinthians 13:5": "It does not dishonor others it is not selfseeking it is not easily angered it keeps no record of wrongs",
+  "1 Corinthians 13:6": "Love does not delight in evil but rejoices with the truth",
+  "1 Corinthians 13:7": "It always protects always trusts always hopes always perseveres",
+  "2 Corinthians 5:14": "For Christs love compels us because we are convinced that one died for all and therefore all died",
+  "Galatians 5:22": "But the fruit of the Spirit is love joy peace patience kindness goodness faithfulness",
+  "Galatians 5:23": "gentleness and selfcontrol Against such things there is no law",
+  "Ephesians 4:29": "Do not let any unwholesome talk come out of your mouths but only what is helpful for building others up according to their needs that it may benefit those who listen",
+  "Philippians 4:6": "Do not be anxious about anything but in every situation by prayer and petition with thanksgiving present your requests to God",
+  "Philippians 4:7": "And the peace of God which transcends all understanding will guard your hearts and your minds in Christ Jesus",
+  "Philippians 4:8": "Finally brothers and sisters whatever is true whatever is noble whatever is right whatever is pure whatever is lovely whatever is admirableif anything is excellent or praiseworthythink about such things",
+  "Philippians 4:11": "I am not saying this because I am in need for I have learned to be content whatever the circumstances",
+  "Philippians 4:12": "I know what it is to be in need and I know what it is to have plenty I have learned the secret of being content in any and every situation whether well fed or hungry whether living in plenty or in want",
+  "Philippians 4:13": "I can do everything through him who gives me strength",
+  "1 Thessalonians 5:18": "give thanks in all circumstances for this is Gods will for you in Christ Jesus",
+  "2 Timothy 3:16": "All Scripture is Godbreathed and is useful for teaching rebuking correcting and training in righteousness",
+  "2 Timothy 3:17": "so that the man of God may be thoroughly equipped for every good work",
+  "Hebrews 12:11": "No discipline seems pleasant at the time but painful Later on however it produces a harvest of righteousness and peace for those who have been trained by it",
+  "James 1:2": "Consider it pure joy my brothers whenever you face trials of many kinds",
+  "James 1:3": "because you know that the testing of your faith develops perseverance",
+  "James 1:4": "Perseverance must finish its work so that you may be mature and complete not lacking anything",
+  "James 1:5": "If any of you lacks wisdom he should ask God who gives generously to all without finding fault and it will be given to him",
+  "James 1:19": "My dear brothers take note of this Everyone should be quick to listen slow to speak and slow to become angry",
+  "James 1:20": "for mans anger does not bring about the righteous life that God desires",
+  "James 3:17": "But the wisdom that comes from heaven is first of all pure then peaceloving considerate submissive full of mercy and good fruit impartial and sincere"
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var cVerse='', cRef='', cWords=[], cMode='firstletter';
+// Tracks how many of the 5 games have been completed for the current verse
+var verseGamesCompleted = 0;
+var verseCompletedRef   = '';
+var nextSlot=0, lockedSlots=[], scrambledWords=[];
+var bankFocusIdx=0, slotFocusIdx=0;
+var fillLocked=[], fillTyped=[];
+var chunks=[], chunkIndex=0, chunkTyped='';
+var loopActive=false, loopTimer=null;
+var playAllActive=false, playAllIdx=0;
+var MEM_KEY='bible-mem-v5';
+var SCRAMBLE_READ_KEY='bible-scramble-read';
+var CHUNK_READ_KEY='bible-chunk-read';
+var scrambleReadOn=(function(){
+  try{ return localStorage.getItem(SCRAMBLE_READ_KEY)==='1'; }catch(e){ return false; }
+})();
+var chunkReadOn=(function(){
+  try{ return localStorage.getItem(CHUNK_READ_KEY)==='1'; }catch(e){ return false; }
+})();
+
+// ─── FOCUSABLE ELEMENTS FOR TAB TRAP ─────────────────────────────────────────
+// Returns all focusable elements on the page in DOM order
+function getFocusScope(){
+  var game=document.getElementById('game-section');
+  if(game && game.style.display!=='none') return game;
+  return document;
+}
+function getFocusable(){
+  var scope=getFocusScope();
+  return Array.from(scope.querySelectorAll(
+    'input:not([disabled]):not([readonly]), select:not([disabled]), button:not([disabled]), [tabindex="0"]'
+  )).filter(function(el){
+    return el.offsetParent!==null && el.tabIndex>=0;
+  });
+}
+
+// Trap Tab inside the page — when Tab reaches the last focusable element
+// it wraps back to the first, and Shift+Tab from first wraps to last.
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Tab') return;
+  var focusable=getFocusable();
+  if(!focusable.length) return;
+  var first=focusable[0];
+  var last=focusable[focusable.length-1];
+  if(focusable.indexOf(document.activeElement)===-1){
+    e.preventDefault();
+    first.focus();
+    return;
+  }
+  if(e.shiftKey){
+    if(document.activeElement===first){
+      e.preventDefault();
+      last.focus();
+    }
+  }else{
+    if(document.activeElement===last){
+      e.preventDefault();
+      first.focus();
+    }
+  }
+},true);
+
+// ─── ANNOUNCE ─────────────────────────────────────────────────────────────────
+var _announceTimer=null;
+function announce(msg){
+  var el=document.getElementById('live-region');
+  // Cancel any pending announce so rapid keypresses don't fragment words
+  if(_announceTimer){ clearTimeout(_announceTimer); _announceTimer=null; }
+  el.textContent='';
+  _announceTimer=setTimeout(function(){
+    _announceTimer=null;
+    el.textContent=msg;
+  },150);
+}
+
+// ─── SOUNDS ───────────────────────────────────────────────────────────────────
+function _audioCtx(){
+  try{ return new(window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+}
+function _tone(ctx, type, freq, gainVal, start, dur){
+  var o=ctx.createOscillator(), g=ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.type=type;
+  o.frequency.setValueAtTime(freq, start);
+  g.gain.setValueAtTime(gainVal, start);
+  g.gain.exponentialRampToValueAtTime(0.001, start+dur);
+  o.start(start); o.stop(start+dur);
+}
+
+function buzz(){
+  var ctx=_audioCtx(); if(!ctx) return;
+  var t=ctx.currentTime;
+  // Low thud + descending square tone
+  _tone(ctx,'square', 140, 0.30, t,       0.12);
+  _tone(ctx,'square', 100, 0.22, t+0.05,  0.28);
+  _tone(ctx,'sine',    60, 0.18, t,       0.40);
+}
+
+function chime(){
+  var ctx=_audioCtx(); if(!ctx) return;
+  var t=ctx.currentTime;
+  // Two-tone ascending ding
+  _tone(ctx,'sine', 880, 0.18, t,       0.22);
+  _tone(ctx,'sine',1100, 0.13, t+0.12,  0.22);
+}
+
+function fanfare(){
+  var ctx=_audioCtx(); if(!ctx) return;
+  var t=ctx.currentTime;
+  // Four ascending tones — triumphant!
+  _tone(ctx,'sine', 523, 0.20, t,        0.18); // C5
+  _tone(ctx,'sine', 659, 0.20, t+0.16,   0.18); // E5
+  _tone(ctx,'sine', 784, 0.20, t+0.32,   0.18); // G5
+  _tone(ctx,'sine',1047, 0.22, t+0.48,   0.32); // C6 — held
+  // Overtone shimmer on final note
+  _tone(ctx,'sine',1568, 0.07, t+0.48,   0.32); // G6
+}
+
+function gameStartSound(){
+  var ctx=_audioCtx(); if(!ctx) return;
+  var t=ctx.currentTime;
+  _tone(ctx,'sine', 660, 0.12, t,       0.14); // E5
+  _tone(ctx,'sine', 880, 0.10, t+0.13,  0.18); // A5
+}
+
+
+var VOICE_PREF_KEY='bible-mem-voice';
+function getPreferredVoiceName(){
+  try{ return localStorage.getItem(VOICE_PREF_KEY)||''; }catch(e){ return ''; }
+}
+function savePreferredVoiceName(name){
+  try{ localStorage.setItem(VOICE_PREF_KEY,name); }catch(e){}
+}
+function getBestVoice(){
+  try{
+    var voices=window.speechSynthesis.getVoices()||[];
+    // 1. Use user-selected voice if saved
+    var saved=getPreferredVoiceName();
+    if(saved){
+      for(var i=0;i<voices.length;i++) if(voices[i].name===saved) return voices[i];
+    }
+    // 2. Fall back to preferred list
+    var preferred=[
+      'Microsoft Aria Online (Natural)',
+      'Microsoft Jenny Online (Natural)',
+      'Microsoft Guy Online (Natural)',
+      'Microsoft David',
+      'Microsoft Zira',
+      'Samantha',
+      'Aaron',
+      'Nicky'
+    ];
+    for(var p=0;p<preferred.length;p++){
+      for(var i=0;i<voices.length;i++){
+        if(voices[i].name.indexOf(preferred[p])>=0) return voices[i];
+      }
+    }
+    for(var i=0;i<voices.length;i++){
+      if(/natural/i.test(voices[i].name)) return voices[i];
+    }
+    return voices.length?voices[0]:null;
+  }catch(e){ return null; }
+}
+function populateVoiceSelect(){
+  var sel=document.getElementById('voice-select');
+  if(!sel) return;
+  var voices=[];
+  try{ voices=window.speechSynthesis.getVoices()||[]; }catch(e){}
+  // Filter to English voices only; fall back to all if none found
+  var engVoices=voices.filter(function(v){ return !v.lang || /^en/i.test(v.lang); });
+  if(!engVoices.length) engVoices=voices;
+  if(!engVoices.length) return; // nothing yet — caller will retry
+  // Sort on-device voices to the top; online voices follow alphabetically
+  engVoices.sort(function(a,b){
+    if(a.localService && !b.localService) return -1;
+    if(!a.localService && b.localService) return 1;
+    return a.name.localeCompare(b.name);
+  });
+  var saved=getPreferredVoiceName();
+  var autoName=''; var auto=getBestVoice(); if(auto) autoName=auto.name;
+  // Rebuild only if list changed (avoids losing selection on re-fires)
+  var newNames=engVoices.map(function(v){return v.name;}).join('|');
+  if(sel._lastNames===newNames) return; // no change
+  sel._lastNames=newNames;
+  var prevVal=sel.value;
+  sel.innerHTML='';
+  engVoices.forEach(function(v){
+    var o=document.createElement('option');
+    o.value=v.name;
+    o.textContent=v.name+(v.localService?' (on-device)':' (online)');
+    sel.appendChild(o);
+  });
+  // Restore saved preference, or auto-pick, or keep previous
+  var target=saved||autoName||prevVal;
+  var matched=false;
+  for(var i=0;i<sel.options.length;i++){
+    if(sel.options[i].value===target){ sel.selectedIndex=i; matched=true; break; }
+  }
+  if(!matched && sel.options.length) sel.selectedIndex=0;
+  // Update the label with a count so user knows voices loaded
+  var lbl=document.getElementById('voice-count-lbl');
+  if(lbl) lbl.textContent='('+engVoices.length+' available)';
+}
+
+// iOS Safari: voices load lazily and only fully unlock after a user-gesture speech call.
+// Strategy: poll at increasing intervals, re-listen to voiceschanged each time it fires,
+// and refresh the list again after the first speakText call.
+var _voicePopDone=false;
+function scheduleVoicePolling(){
+  // Retry schedule (ms): covers slow iOS devices and the post-speech unlock
+  var delays=[100,400,900,1800,3000,5000,8000,12000];
+  delays.forEach(function(d){
+    setTimeout(function(){
+      populateVoiceSelect();
+    }, d);
+  });
+}
+function initVoiceSelect(){
+  scheduleVoicePolling();
+
+  // voiceschanged fires on Chrome/Edge/Android; on iOS it may fire multiple times
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged=function(){
+      populateVoiceSelect();
+      // Re-hook in case iOS fires it again
+      scheduleVoicePolling();
+    };
+  }
+
+  var sel=document.getElementById('voice-select');
+  if(sel){
+    sel.addEventListener('change',function(){
+      savePreferredVoiceName(sel.value);
+      announce('Voice changed to '+sel.value+'. Press Test voice to preview.');
+    });
+  }
+  var testBtn=document.getElementById('voice-test-btn');
+  if(testBtn){
+    testBtn.addEventListener('click',function(){
+      var name=sel?sel.value:'';
+      if(name) savePreferredVoiceName(name);
+      speakText('The LORD is my shepherd. I shall not be in want.', function(){
+        // After first speech on iOS, the full voice list often becomes available
+        setTimeout(populateVoiceSelect, 300);
+        setTimeout(populateVoiceSelect, 1200);
+      });
+    });
+  }
+  var reloadBtn=document.getElementById('voice-reload-btn');
+  if(reloadBtn){
+    reloadBtn.addEventListener('click',function(){
+      sel._lastNames=''; // force full rebuild
+      populateVoiceSelect();
+      setTimeout(populateVoiceSelect, 800);
+      var count=sel?sel.options.length:0;
+      announce('Voice list refreshed. '+count+' English voices available. If the count seems low, press Test voice first, then press Reload voices again.');
+    });
+  }
+}
+
+var RATE_PREF_KEY='bible-mem-rate';
+function getSpeechRate(){
+  try{
+    var sel=document.getElementById('rate-select');
+    if(sel && sel.value) return parseFloat(sel.value);
+    var saved=localStorage.getItem(RATE_PREF_KEY);
+    if(saved) return parseFloat(saved);
+  }catch(e){}
+  return 0.92;
+}
+function initRateSelect(){
+  var sel=document.getElementById('rate-select');
+  if(!sel) return;
+  try{
+    var saved=localStorage.getItem(RATE_PREF_KEY);
+    if(saved){
+      for(var i=0;i<sel.options.length;i++){
+        if(sel.options[i].value===saved){ sel.selectedIndex=i; break; }
+      }
+    }
+  }catch(e){}
+  sel.addEventListener('change',function(){
+    try{ localStorage.setItem(RATE_PREF_KEY,sel.value); }catch(e){}
+    announce('Speech rate changed to '+sel.options[sel.selectedIndex].text);
+  });
+}
+var _spokenOnce=false;
+var _speechActive=false; // true while speechSynthesis is speaking
+function speakText(text, after){
+  try{
+    if(!('speechSynthesis' in window)){ announce(text); if(after) setTimeout(after,1000); return; }
+    window.speechSynthesis.cancel();
+    _speechActive=true;
+    var u=new SpeechSynthesisUtterance(text);
+    var v=getBestVoice();
+    if(v) u.voice=v;
+    u.rate=getSpeechRate();
+    u.pitch=1;
+    u.volume=1;
+    u.onend=function(){
+      _speechActive=false;
+      stopFocusGuard(); // release guard — gameplay takes over focus from here
+      if(!_spokenOnce){
+        _spokenOnce=true;
+        setTimeout(populateVoiceSelect,300);
+        setTimeout(populateVoiceSelect,1500);
+      }
+      if(after) after();
+    };
+    u.onerror=function(){ _speechActive=false; stopFocusGuard(); if(after) after(); };
+    window.speechSynthesis.speak(u);
+  }catch(e){ _speechActive=false; announce(text); if(after) setTimeout(after,1000); }
+}
+
+// announce() that stays silent while speech synthesis is playing, to prevent JAWS overlap
+function announceQuiet(msg){
+  if(_speechActive) return; // speech synthesis is talking — don't fire JAWS
+  announce(msg);
+}
+
+if('speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged=function(){ populateVoiceSelect(); };
+}
+function stopLoop(){
+  loopActive=false;
+  if(loopTimer){ clearTimeout(loopTimer); loopTimer=null; }
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  var btn=document.getElementById('loop-btn');
+  if(btn){ btn.textContent='Start loop verse audio'; btn.className=''; }
+  // Also cancel play-all if running
+  if(playAllActive){
+    playAllActive=false;
+    var paBtn=document.getElementById('play-all-btn');
+    if(paBtn){ paBtn.textContent='Play all memorized verses'; paBtn.className=''; }
+    setPlayAllStatus('');
+  }
+}
+function startLoop(){
+  if(!cVerse){ announce('Load a verse first.'); return; }
+  // Cancel play-all if running
+  if(playAllActive){
+    playAllActive=false;
+    var paBtn=document.getElementById('play-all-btn');
+    if(paBtn){ paBtn.textContent='Play all memorized verses'; paBtn.className=''; }
+    setPlayAllStatus('');
+  }
+  loopActive=true;
+  var btn=document.getElementById('loop-btn');
+  if(btn){ btn.textContent='Loop verse audio is on'; btn.className='loop-on'; }
+  function playAgain(){
+    if(!loopActive) return;
+    speakText(cRef+'. '+cVerse, function(){
+      if(loopActive) loopTimer=setTimeout(playAgain,1800);
+    });
+  }
+  playAgain();
+}
+
+// ─── VERSE LOOKUP ─────────────────────────────────────────────────────────────
+function findVerse(raw){
+  var ref=findVerseRef(raw);
+  return ref?VERSES[ref]:null;
+}
+function setVerseError(msg){
+  var el=document.getElementById('verse-error');
+  el.textContent=msg; el.style.display=msg?'':'none';
+}
+
+function sortRefs(a,b){return a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'});}
+function findVerseRef(raw){
+  if(VERSES[raw]) return raw;
+  var lo=String(raw||'').toLowerCase().trim();
+  var keys=Object.keys(VERSES);
+  for(var i=0;i<keys.length;i++) if(keys[i].toLowerCase()===lo) return keys[i];
+  return null;
+}
+
+// ─── CUSTOM ARIA LISTBOX FOR VERSE SELECTION ──────────────────────────────────
+// A native <select> is unreliable with JAWS — it intercepts keystrokes before
+// our JS can see them. This custom listbox gives us full keyboard control.
+
+var vlistOpen = false;
+var vlistRefs = [];   // sorted ref strings, matches <li> order
+var vlistIdx  = -1;   // currently focused item index (-1 = none)
+
+function populateVerseSelect(){
+  // Keep the hidden native select in sync (used by other code for .value reads)
+  var sel = document.getElementById('verse-select');
+  var oldVal = sel ? sel.value : '';
+  if(sel){
+    sel.innerHTML = '<option value="">Choose a verse</option>';
+    Object.keys(VERSES).sort(sortRefs).forEach(function(ref){
+      var o = document.createElement('option');
+      o.value = ref; o.textContent = ref;
+      sel.appendChild(o);
+    });
+    if(oldVal && VERSES[oldVal]) sel.value = oldVal;
+  }
+
+  // Rebuild the visible listbox <li> items
+  vlistRefs = Object.keys(VERSES).sort(sortRefs);
+  var lb = document.getElementById('vlist-listbox');
+  if(!lb) return;
+  lb.innerHTML = '';
+  vlistRefs.forEach(function(ref, i){
+    var li = document.createElement('li');
+    li.setAttribute('role','option');
+    li.setAttribute('aria-selected','false');
+    li.setAttribute('data-ref', ref);
+    li.setAttribute('id', 'vlist-opt-'+i);
+    li.textContent = ref;
+    li.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:18px;';
+    li.addEventListener('mousedown', function(e){
+      e.preventDefault();
+      vlistSelectIdx(i);
+      vlistClose();
+    });
+    li.addEventListener('mouseover', function(){
+      vlistFocusIdx(i);
+    });
+    lb.appendChild(li);
+  });
+  // Keep the manage verse list in sync
+  if(typeof renderManageVerses === 'function') renderManageVerses();
+}
+
+function vlistFocusIdx(i){
+  var lb = document.getElementById('vlist-listbox');
+  var items = lb ? lb.querySelectorAll('[role=option]') : [];
+  if(i < 0 || i >= items.length) return;
+  if(vlistIdx >= 0 && items[vlistIdx]){
+    items[vlistIdx].style.background = '';
+    items[vlistIdx].setAttribute('aria-selected','false');
+  }
+  vlistIdx = i;
+  items[i].style.background = 'var(--primary-soft)';
+  items[i].setAttribute('aria-selected','true');
+  lb.setAttribute('aria-activedescendant','vlist-opt-'+i);
+  items[i].scrollIntoView({block:'nearest'});
+  // aria-activedescendant is sufficient — no live-region announce needed
+}
+
+function vlistSelectIdx(i){
+  if(i < 0 || i >= vlistRefs.length) return;
+  var ref = vlistRefs[i];
+  var sel = document.getElementById('verse-select');
+  if(sel) sel.value = ref;
+  document.getElementById('vlist-btn-text').textContent = ref;
+  document.getElementById('vlist-btn').setAttribute('aria-label', ref+', change verse');
+  vlistIdx = i;
+  beginGame(ref, VERSES[ref]);
+  // Focus game heading after DOM settles — prevents focus escape to bottom of page
+  setTimeout(function(){
+    var gh=document.getElementById('game-heading');
+    if(gh){ gh.setAttribute('tabindex','-1'); gh.focus(); }
+  },150);
+}
+
+function vlistOpen_fn(){
+  var lb = document.getElementById('vlist-listbox');
+  var btn = document.getElementById('vlist-btn');
+  if(!lb || !btn) return;
+  lb.style.display = 'block';
+  btn.setAttribute('aria-expanded','true');
+  vlistOpen = true;
+  // Focus the listbox so JAWS enters it
+  lb.focus();
+  // Highlight the currently selected ref if any, else item 0
+  var sel = document.getElementById('verse-select');
+  var cur = sel ? sel.value : '';
+  var startIdx = cur ? vlistRefs.indexOf(cur) : -1;
+  vlistFocusIdx(startIdx >= 0 ? startIdx : 0);
+}
+
+function vlistClose(){
+  var lb = document.getElementById('vlist-listbox');
+  var btn = document.getElementById('vlist-btn');
+  if(lb) lb.style.display = 'none';
+  if(btn){ btn.setAttribute('aria-expanded','false'); btn.focus(); }
+  vlistOpen = false;
+}
+
+// Button opens/closes the listbox
+document.getElementById('vlist-btn').addEventListener('click', function(){
+  if(vlistOpen){ vlistClose(); } else { vlistOpen_fn(); }
+});
+document.getElementById('vlist-btn').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); vlistOpen_fn(); }
+  if(e.key === 'Escape'){ vlistClose(); }
+});
+
+// Listbox keyboard handling — JAWS will use these since the listbox has focus
+document.getElementById('vlist-listbox').addEventListener('keydown', function(e){
+  var items = this.querySelectorAll('[role=option]');
+  var total = items.length;
+  if(total === 0) return;
+
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    vlistFocusIdx(Math.min(vlistIdx + 1, total - 1));
+  } else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    vlistFocusIdx(Math.max(vlistIdx - 1, 0));
+  } else if(e.key === 'Home'){
+    e.preventDefault();
+    vlistFocusIdx(0);
+  } else if(e.key === 'End'){
+    e.preventDefault();
+    vlistFocusIdx(total - 1);
+  } else if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    if(vlistIdx >= 0){ vlistSelectIdx(vlistIdx); vlistClose(); }
+  } else if(e.key === 'Escape' || e.key === 'Tab'){
+    e.preventDefault();
+    vlistClose();
+  } else if(e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)){
+    // Type-ahead: jump to next ref starting with this letter
+    e.preventDefault();
+    var wanted = e.key.toLowerCase();
+    var start = vlistIdx >= 0 ? vlistIdx : -1;
+    for(var step = 1; step <= total; step++){
+      var idx = (start + step) % total;
+      var ref = vlistRefs[idx];
+      var first = String(ref||'').replace(/^\s*[1-3]\s+/,'').trim().toLowerCase().charAt(0);
+      if(first === wanted || ref.toLowerCase().charAt(0) === wanted){
+        vlistFocusIdx(idx);
+        return;
+      }
+    }
+    // Nothing found — announce it
+    var liveEl = document.getElementById('live-region');
+    liveEl.textContent = '';
+    setTimeout(function(){ liveEl.textContent = 'No verse starts with ' + e.key.toUpperCase(); }, 50);
+  }
+});
+
+// Close if focus leaves the listbox area
+document.getElementById('vlist-listbox').addEventListener('blur', function(e){
+  // Small delay so mousedown on an item can fire first
+  setTimeout(function(){
+    if(vlistOpen && document.activeElement !== document.getElementById('vlist-btn') &&
+       !document.getElementById('vlist-listbox').contains(document.activeElement)){
+      vlistClose();
+    }
+  }, 150);
+});
+
+Array.from(document.querySelectorAll('input[name="mode"]')).forEach(function(radio){
+  radio.addEventListener('change',function(){
+    if(!this.checked) return;
+    if(cRef && VERSES[cRef]){
+      beginGame(cRef,VERSES[cRef]);
+      focusFirstGameElement();
+    }
+  });
+});
+// ─── FILE SYSTEM ACCESS API (remember Bible.xlsm between sessions) ────────────
+var savedFileHandle = null;
+
+async function loadSavedHandle(){
+  try{
+    if(!('showOpenFilePicker' in window)) return;
+    var db = await openHandleDB();
+    var handle = await dbGet(db,'fileHandle');
+    if(handle){ savedFileHandle=handle; showReimportBtn(true); }
+  }catch(e){}
+}
+function openHandleDB(){
+  return new Promise(function(res,rej){
+    var req=indexedDB.open('bible-game-db',1);
+    req.onupgradeneeded=function(e){ e.target.result.createObjectStore('store'); };
+    req.onsuccess=function(e){ res(e.target.result); };
+    req.onerror=function(){ rej(); };
+  });
+}
+function dbGet(db,key){
+  return new Promise(function(res,rej){
+    var tx=db.transaction('store','readonly');
+    var req=tx.objectStore('store').get(key);
+    req.onsuccess=function(){ res(req.result); };
+    req.onerror=function(){ rej(); };
+  });
+}
+function dbPut(db,key,val){
+  return new Promise(function(res,rej){
+    var tx=db.transaction('store','readwrite');
+    tx.objectStore('store').put(val,key);
+    tx.oncomplete=function(){ res(); };
+    tx.onerror=function(){ rej(); };
+  });
+}
+async function saveHandle(handle){
+  try{ var db=await openHandleDB(); await dbPut(db,'fileHandle',handle); }catch(e){}
+}
+function showReimportBtn(show){
+  var btn=document.getElementById('reimport-btn');
+  if(btn) btn.style.display=show?'':'none';
+}
+
+async function pickAndImport(){
+  if('showOpenFilePicker' in window){
+    try{
+      var handles=await window.showOpenFilePicker({
+        types:[{description:'Excel files',accept:{'application/vnd.ms-excel':['.xlsx','.xls','.xlsm']}}],
+        multiple:false
+      });
+      if(!handles||!handles.length) return;
+      savedFileHandle=handles[0];
+      await saveHandle(savedFileHandle);
+      showReimportBtn(true);
+      var file=await savedFileHandle.getFile();
+      importExcelWorkbook(file);
+    }catch(e){
+      if(e.name!=='AbortError'){
+        document.getElementById('excel-file').value='';
+        document.getElementById('excel-file').click();
+      }
+    }
+  } else {
+    document.getElementById('excel-file').value='';
+    document.getElementById('excel-file').click();
+  }
+}
+
+async function reimport(){
+  if(!savedFileHandle){ pickAndImport(); return; }
+  try{
+    var perm=await savedFileHandle.requestPermission({mode:'read'});
+    if(perm==='granted'){
+      var file=await savedFileHandle.getFile();
+      importExcelWorkbook(file);
+    } else {
+      announce('Permission denied. Please use Import Bible.xlsm to pick the file again.');
+    }
+  }catch(e){
+    announce('Could not reopen the file. Please use Import Bible.xlsm to pick it again.');
+    pickAndImport();
+  }
+}
+
+document.getElementById('check-excel-btn').addEventListener('click', pickAndImport);
+document.getElementById('reimport-btn').addEventListener('click', reimport);
+document.getElementById('excel-file').addEventListener('change',function(){
+  if(this.files && this.files[0]) importExcelWorkbook(this.files[0]);
+});
+loadSavedHandle();
+
+var CUSTOM_VERSES_KEY='bible-custom-verses-v1';
+function loadCustomVerses(){
+  try{ var r=localStorage.getItem(CUSTOM_VERSES_KEY); if(r){ var obj=JSON.parse(r); Object.assign(VERSES,obj); } }catch(e){}
+}
+loadCustomVerses();
+
+// ─── EDIT MODE STATE ──────────────────────────────────────────────────────────
+var _editingRef = null; // original ref being edited, or null if adding new
+
+function enterEditMode(ref){
+  _editingRef = ref;
+  var text = VERSES[ref] || '';
+  document.getElementById('custom-ref-input').value = ref;
+  document.getElementById('custom-text-input').value = text;
+  document.getElementById('add-verse-heading').textContent = 'Edit verse';
+  document.getElementById('add-verse-desc').style.display = 'none';
+  var notice = document.getElementById('edit-verse-notice');
+  notice.textContent = 'Editing: ' + ref + '. Change the reference or text, then press Save verse. Press Cancel to discard changes.';
+  notice.style.display = '';
+  document.getElementById('cancel-edit-btn').style.display = '';
+  document.getElementById('save-verse-btn').textContent = 'Save changes';
+  document.getElementById('custom-ref-input').focus();
+  announce('Editing ' + ref + '. Change the text then press Save changes, or press Cancel edit to discard.');
+  // Scroll the form into view
+  document.getElementById('add-verse-heading').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function exitEditMode(){
+  _editingRef = null;
+  document.getElementById('custom-ref-input').value = '';
+  document.getElementById('custom-text-input').value = '';
+  document.getElementById('add-verse-heading').textContent = 'Add your own verse';
+  document.getElementById('add-verse-desc').style.display = '';
+  document.getElementById('edit-verse-notice').style.display = 'none';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
+  document.getElementById('save-verse-btn').textContent = 'Save verse';
+}
+
+document.getElementById('cancel-edit-btn').addEventListener('click', function(){
+  exitEditMode();
+  announce('Edit cancelled.');
+  document.getElementById('custom-ref-input').focus();
+});
+
+// ─── MEMORIZED VERSES PANEL TOGGLE ───────────────────────────────────────────
+document.getElementById('mem-toggle-btn').addEventListener('click', function(){
+  var body = document.getElementById('mem-collapsible');
+  var btn  = document.getElementById('mem-toggle-btn');
+  var open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? 'Hide memorized verses' : 'Show memorized verses';
+  if(open){
+    var list = loadMemList();
+    announce('Memorized verses expanded. ' + list.length + ' verse' + (list.length !== 1 ? 's' : '') + ' in your list.');
+    setTimeout(function(){
+      var first = document.querySelector('#memorized-list h3');
+      if(first){ first.setAttribute('tabindex','-1'); first.focus(); }
+    }, 80);
+  } else {
+    announce('Memorized verses collapsed.');
+  }
+});
+
+// ─── MANAGE VERSE PANEL TOGGLE ────────────────────────────────────────────────
+document.getElementById('manage-toggle-btn').addEventListener('click', function(){
+  var body = document.getElementById('manage-verse-body');
+  var btn  = document.getElementById('manage-toggle-btn');
+  var open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? 'Hide verse manager' : 'Show verse manager';
+  if(open){
+    announce('Verse manager expanded. ' + Object.keys(VERSES).length + ' verses listed.');
+    // Focus first Edit button so JAWS lands in the list
+    setTimeout(function(){
+      var first = document.querySelector('#manage-verse-list button');
+      if(first) first.focus();
+    }, 80);
+  } else {
+    announce('Verse manager collapsed.');
+  }
+});
+
+// ─── DELETE A VERSE ───────────────────────────────────────────────────────────
+function deleteVerse(ref){
+  if(!confirm('Delete "' + ref + '" from the verse list? This cannot be undone.')) return;
+  delete VERSES[ref];
+  // Remove from custom storage
+  try{
+    var saved=JSON.parse(localStorage.getItem(CUSTOM_VERSES_KEY)||'{}');
+    delete saved[ref];
+    localStorage.setItem(CUSTOM_VERSES_KEY, JSON.stringify(saved));
+  }catch(e){}
+  // If this was a built-in verse (not in custom storage), store a deletion marker
+  try{
+    var deleted=JSON.parse(localStorage.getItem('bible-deleted-verses')||'[]');
+    if(deleted.indexOf(ref)<0){ deleted.push(ref); localStorage.setItem('bible-deleted-verses', JSON.stringify(deleted)); }
+  }catch(e){}
+  populateVerseSelect();
+  renderManageVerses();
+  // If current game was using this verse, close the game
+  if(cRef===ref){
+    document.getElementById('game-section').style.display='none';
+    document.getElementById('feedback').style.display='none';
+    cRef=''; cVerse='';
+  }
+  if(_editingRef===ref) exitEditMode();
+  announce(ref + ' deleted from verse list.');
+  document.getElementById('verse-status').textContent = ref + ' deleted.';
+}
+
+// ─── MANAGE VERSE LIST ────────────────────────────────────────────────────────
+function renderManageVerses(){
+  var container = document.getElementById('manage-verse-list');
+  var emptyMsg = document.getElementById('manage-verse-empty');
+  if(!container) return;
+  container.innerHTML = '';
+  var refs = Object.keys(VERSES).sort(sortRefs);
+  if(!refs.length){
+    container.style.display = 'none';
+    if(emptyMsg) emptyMsg.style.display = '';
+    return;
+  }
+  if(emptyMsg) emptyMsg.style.display = 'none';
+  container.style.display = '';
+  refs.forEach(function(ref){
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 4px;border-bottom:1px solid #d4c9b0;flex-wrap:wrap;';
+    var refHeading = document.createElement('h3');
+    refHeading.textContent = ref;
+    refHeading.style.cssText = 'flex:1;font-family:"Playfair Display",serif;font-size:17px;font-weight:700;color:#102045;min-width:120px;margin:0;';
+    var editBtn = document.createElement('button');
+    editBtn.className = 'small';
+    editBtn.textContent = 'Edit';
+    editBtn.setAttribute('aria-label', 'Edit ' + ref);
+    editBtn.addEventListener('click', function(){ enterEditMode(ref); });
+    var delBtn = document.createElement('button');
+    delBtn.className = 'small';
+    delBtn.textContent = 'Delete';
+    delBtn.setAttribute('aria-label', 'Delete ' + ref + ' from verse list');
+    delBtn.style.borderColor = '#9b111e';
+    delBtn.style.color = '#9b111e';
+    delBtn.addEventListener('click', function(){ deleteVerse(ref); });
+    row.appendChild(refHeading);
+    row.appendChild(editBtn);
+    row.appendChild(delBtn);
+    container.appendChild(row);
+  });
+}
+
+function cleanVerseText(t){
+  return t.replace(/\s+/g,' ').trim();
+}
+function saveCustomVerse(){
+  var refRaw=document.getElementById('custom-ref-input').value.trim();
+  var textRaw=document.getElementById('custom-text-input').value.trim();
+  if(!refRaw){
+    setVerseError('Please enter a verse reference (e.g. John 3:16).');
+    announce('Please enter a verse reference.');
+    document.getElementById('custom-ref-input').focus();
+    return;
+  }
+  if(!textRaw){
+    setVerseError('Please enter the verse text.');
+    announce('Please enter the verse text.');
+    document.getElementById('custom-text-input').focus();
+    return;
+  }
+  // Normalize ref — capitalise first letter of each word
+  var ref=refRaw.replace(/\b\w/g,function(c){return c.toUpperCase();});
+  var text=cleanVerseText(textRaw);
+  // Strip punctuation for game use (matches existing verse format)
+  var gameText=text.replace(/[.,;:!?()\[\]{}"'""''`´\-–—…\/\\|@#$%^&*+=<>~]/g,'').replace(/\s+/g,' ').trim();
+
+  // If editing and the ref changed, remove the old one
+  if(_editingRef && _editingRef !== ref){
+    delete VERSES[_editingRef];
+    try{
+      var saved=JSON.parse(localStorage.getItem(CUSTOM_VERSES_KEY)||'{}');
+      delete saved[_editingRef];
+      localStorage.setItem(CUSTOM_VERSES_KEY, JSON.stringify(saved));
+    }catch(e){}
+  }
+
+  VERSES[ref]=gameText;
+  // Persist custom verses
+  try{
+    var saved=JSON.parse(localStorage.getItem(CUSTOM_VERSES_KEY)||'{}');
+    saved[ref]=gameText;
+    localStorage.setItem(CUSTOM_VERSES_KEY,JSON.stringify(saved));
+    // Remove from deletion list if previously deleted
+    var deleted=JSON.parse(localStorage.getItem('bible-deleted-verses')||'[]');
+    var di=deleted.indexOf(ref);
+    if(di>=0){ deleted.splice(di,1); localStorage.setItem('bible-deleted-verses', JSON.stringify(deleted)); }
+  }catch(e){}
+
+  var wasEditing = !!_editingRef;
+  exitEditMode();
+  populateVerseSelect();
+  renderManageVerses();
+  setVerseError('');
+  document.getElementById('verse-status').textContent=(wasEditing?'Updated: ':'Saved: ')+ref+'. Starting game…';
+  announce('Verse '+(wasEditing?'updated':'saved')+': '+ref+'. Starting game.');
+  beginGame(ref,gameText);
+}
+
+
+function randomVerse(){
+  var keys=Object.keys(VERSES);
+  var memList=loadMemList();
+  var memRefs=memList.map(function(v){return v.ref;});
+  var available=keys.filter(function(k){return memRefs.indexOf(k)<0;});
+  if(!available.length){
+    announce('All verses have been memorized. No unmemorized verses to pick from.');
+    document.getElementById('verse-status').textContent='All verses are memorized. Remove some from the memorized list to use Random verse.';
+    return;
+  }
+  var pick=available[Math.floor(Math.random()*available.length)];
+  var sel=document.getElementById('verse-select'); if(sel) sel.value=pick;
+  beginGame(pick,VERSES[pick]);
+}
+
+document.getElementById('save-verse-btn').addEventListener('click',function(e){
+  e.preventDefault();
+  saveCustomVerse();
+  // After beginGame runs and DOM settles, focus the game heading
+  setTimeout(function(){
+    var gh=document.getElementById('game-heading');
+    if(gh){ gh.setAttribute('tabindex','-1'); gh.focus(); }
+  },150);
+});
+document.getElementById('random-btn').addEventListener('click',function(e){
+  e.preventDefault();
+  var btn=this;
+  randomVerse();
+  setTimeout(function(){
+    var gh=document.getElementById('game-heading');
+    if(gh && document.getElementById('game-section').style.display!=='none'){
+      gh.setAttribute('tabindex','-1'); gh.focus();
+    } else {
+      btn.focus();
+    }
+  },150);
+});
+
+// ─── BEGIN GAME ───────────────────────────────────────────────────────────────
+function modeName(mode){
+  if(mode==='scramble') return 'Word scramble';
+  if(mode==='firstletter') return 'First letter fill-in';
+  if(mode==='chunk') return 'Phrase Builder';
+  if(mode==='cloze') return 'Missing word fill-in';
+  if(mode==='multiplechoice') return 'Multiple choice';
+  return mode;
+}
+function beginGame(ref,text){
+  stopLoop(); stopFocusGuard();
+  // Reset the 5-game completion counter when a new verse is loaded
+  if(ref !== verseCompletedRef){
+    verseGamesCompleted = 0;
+    verseCompletedRef   = ref;
+  }
+  cRef=ref; cVerse=text;
+  var sel=document.getElementById('verse-select'); if(sel && VERSES[ref]) sel.value=ref;
+  cWords=text.split(/\s+/).filter(Boolean);
+  cMode=document.querySelector('input[name="mode"]:checked').value;
+  setVerseError('');
+  document.getElementById('verse-status').textContent='Loaded: '+cRef+' ('+cWords.length+' words)';
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('game-section').style.display='block';
+  // Slide-in animation on game section (purely visual)
+  var gs=document.getElementById('game-section');
+  gs.classList.remove('game-entering');
+  void gs.offsetWidth; // force reflow to restart animation
+  gs.classList.add('game-entering');
+  gameStartSound();
+  document.getElementById('game-heading').textContent=cRef+' — '+modeName(cMode);
+
+  document.getElementById('scramble-section').style.display='none';
+  document.getElementById('fill-section').style.display='none';
+  document.getElementById('chunk-section').style.display='none';
+  document.getElementById('cloze-section').style.display='none';
+  document.getElementById('mc-section').style.display='none';
+  var undoBtn=document.getElementById('undo-word-btn');
+  if(undoBtn) undoBtn.style.display='none';
+  // Clean up any lingering MC keyboard handler
+  var mcContainer=document.getElementById('mc-choices');
+  if(mcContainer&&mcContainer._mcKeyHandler){
+    document.removeEventListener('keydown',mcContainer._mcKeyHandler);
+    mcContainer._mcKeyHandler=null;
+  }
+
+  if(cMode==='scramble'){
+    document.getElementById('game-desc').textContent='Select each word in the correct order. Wrong words buzz and are rejected. Correct words lock in place. Press Delete or Backspace on a filled slot to undo it.';
+    document.getElementById('scramble-section').style.display='block';
+    buildScramble();
+  }else if(cMode==='firstletter'){
+    document.getElementById('game-desc').textContent='Type each word. Wrong letters are rejected immediately. After each correct word the verse so far is read aloud.';
+    document.getElementById('fill-section').style.display='block';
+    buildFill();
+  }else if(cMode==='chunk'){
+    document.getElementById('game-desc').textContent='Learn the verse in short phrase chunks. Press Hear phrase, then type the phrase. Wrong letters are rejected immediately. When the phrase is correct, the app moves to the next phrase automatically.';
+    document.getElementById('chunk-section').style.display='block';
+    buildChunkMode();
+  }else if(cMode==='cloze'){
+    document.getElementById('game-desc').textContent='Several words are hidden. Type each missing word. Wrong letters are rejected and buzz. Correct words lock green.';
+    document.getElementById('cloze-section').style.display='block';
+    buildCloze();
+  }else if(cMode==='multiplechoice'){
+    document.getElementById('game-desc').textContent='For each word, choose from four options. Press 1, 2, 3, or 4 on the keyboard, or Tab to a button and press Enter or Space.';
+    document.getElementById('mc-section').style.display='block';
+    buildMultipleChoice();
+  }
+  announce('Loaded '+cRef+'.');
+  focusFirstGameElement();
+}
+
+// ─── SCRAMBLE ─────────────────────────────────────────────────────────────────
+function shuffle(arr){
+  var a=arr.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  return a;
+}
+function buildScramble(){
+  nextSlot=0;
+  lockedSlots=cWords.map(function(){return false;});
+  scrambledWords=shuffle(cWords);
+  bankFocusIdx=0; slotFocusIdx=0;
+  renderBank(); renderSlots();
+  setTimeout(function(){
+    var c=document.getElementById('word-bank-container');
+    if(c) c.focus();
+  },60);
+}
+function getBankBtns(){return Array.from(document.getElementById('word-bank-container').querySelectorAll('[role=none]'));}
+function getSlotBtns(){return Array.from(document.getElementById('answer-slots-container').querySelectorAll('.slot-btn'));}
+
+function renderBank(){
+  var c=document.getElementById('word-bank-container');
+  c.innerHTML='';
+  if(!scrambledWords.length){
+    c.setAttribute('aria-label','Word bank, empty. All words placed.');
+    c.innerHTML='<p style="color:#555;font-size:14px;padding:4px" aria-hidden="true">Word bank empty \u2014 all words placed.</p>';
+    c.onkeydown=null;
+    var undoBtn=document.getElementById('undo-word-btn');
+    if(undoBtn) undoBtn.style.display=(nextSlot>0)?'':'none';
+    return;
+  }
+  var total=scrambledWords.length;
+  c.setAttribute('aria-label','Word bank');
+  scrambledWords.forEach(function(w,i){
+    var opt=document.createElement('div');
+    opt.setAttribute('role','none');
+    opt.setAttribute('id','bank-opt-'+i);
+    opt.textContent=w;
+    opt.style.cssText='font-size:19px;font-family:Lato,Arial,sans-serif;font-weight:700;padding:9px 16px;border:2px solid #30455f;border-radius:999px;background:#fff;color:#102045;cursor:pointer;min-width:48px;text-align:center;user-select:none;';
+    if(i===bankFocusIdx){
+      opt.style.background='var(--primary-soft)';
+      opt.style.borderColor='var(--navy)';
+      opt.style.outline='3px solid #ffbf47';
+      opt.style.outlineOffset='2px';
+    }
+    opt.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      bankFocusIdx=i; updateBankHighlight(); c.focus(); tryWord(w,i);
+    });
+    // iOS VoiceOver double-tap fires touchend — prevent default to stop focus jumping to top
+    opt.addEventListener('touchend',function(e){
+      e.preventDefault();
+      bankFocusIdx=i; updateBankHighlight();
+      c.scrollIntoView({block:'nearest',behavior:'instant'});
+      c.focus();
+      tryWord(w,i);
+    });
+    c.appendChild(opt);
+  });
+  // No aria-activedescendant — we use the live-region instead (no role=option children)
+  c.onkeydown=bankKeydown;
+  var undoBtn=document.getElementById('undo-word-btn');
+  if(undoBtn) undoBtn.style.display=(nextSlot>0)?'':'none';
+}
+
+function updateBankHighlight(){
+  var opts=getBankBtns();
+  opts.forEach(function(opt,i){
+    var sel=i===bankFocusIdx;
+    opt.style.background=sel?'var(--primary-soft)':'#fff';
+    opt.style.borderColor=sel?'var(--navy)':'#30455f';
+    opt.style.outline=sel?'3px solid #ffbf47':'none';
+    opt.style.outlineOffset=sel?'2px':'0';
+  });
+}
+
+function bankKeydown(e){
+  var opts=getBankBtns(); if(!opts.length) return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){
+    e.preventDefault();
+    bankFocusIdx=(bankFocusIdx+1)%opts.length;
+    updateBankHighlight();
+    announce(scrambledWords[bankFocusIdx]);
+  }else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
+    e.preventDefault();
+    bankFocusIdx=(bankFocusIdx-1+opts.length)%opts.length;
+    updateBankHighlight();
+    announce(scrambledWords[bankFocusIdx]);
+  }else if(e.key==='Enter'||e.key===' '){
+    e.preventDefault();
+    if(bankFocusIdx<scrambledWords.length) tryWord(scrambledWords[bankFocusIdx],bankFocusIdx);
+  }else if(e.key==='Tab'&&!e.shiftKey){
+    e.preventDefault();
+    var slots=getSlotBtns(); var t=slots[slotFocusIdx]||slots[0]; if(t)t.focus();
+  }else if(e.key.length===1 && !e.ctrlKey && !e.altKey && !e.metaKey && /[a-zA-Z]/.test(e.key)){
+    e.preventDefault();
+    var letter=e.key.toLowerCase();
+    var len=scrambledWords.length;
+    // Search forward from the position after current, wrapping around
+    for(var fi=1;fi<=len;fi++){
+      var idx=(bankFocusIdx+fi)%len;
+      if(scrambledWords[idx][0].toLowerCase()===letter){
+        bankFocusIdx=idx;
+        updateBankHighlight();
+        announce(scrambledWords[bankFocusIdx]);
+        return;
+      }
+    }
+    // No match found
+    announce('No word starting with '+e.key.toUpperCase()+' in bank.');
+  }
+}
+function renderSlots(){
+  var c=document.getElementById('answer-slots-container');
+  c.innerHTML='';
+  var total=cWords.length;
+  var locked=cWords.filter(function(_,i){return lockedSlots[i];}).length;
+  // Update progress bar
+  var pct=total>0?Math.round(locked/total*100):0;
+  var pb=document.getElementById('scramble-progress-bar');
+  var pw=document.getElementById('scramble-progress-wrap');
+  if(pb){pb.style.width=pct+'%';}
+  if(pw){pw.setAttribute('aria-valuenow',pct);pw.setAttribute('aria-label','Scramble progress: '+locked+' of '+total+' words placed');}
+  cWords.forEach(function(w,i){
+    var btn=document.createElement('button');
+    btn.setAttribute('tabindex',i===slotFocusIdx?'0':'-1');
+    btn.addEventListener('keydown',slotKeydown);
+    if(lockedSlots[i]){
+      btn.className='slot-btn correct-lock'; btn.textContent=w;
+      btn.setAttribute('aria-label','Slot '+(i+1)+' of '+total+', correct: '+w+'. Press Delete to undo.');
+    }else if(i===nextSlot){
+      btn.className='slot-btn next-slot'; btn.textContent='Slot '+(i+1);
+      btn.setAttribute('aria-label','Slot '+(i+1)+' of '+total+', next to fill.');
+    }else{
+      btn.className='slot-btn'; btn.textContent='Slot '+(i+1);
+      btn.setAttribute('aria-label','Slot '+(i+1)+' of '+total+', waiting');
+    }
+    c.appendChild(btn);
+  });
+}
+function slotKeydown(e){
+  var slots=getSlotBtns(); if(!slots.length)return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){
+    e.preventDefault(); slotFocusIdx=(slotFocusIdx+1)%slots.length;
+    updateSlotTabindex(); slots[slotFocusIdx].focus();
+  }else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
+    e.preventDefault(); slotFocusIdx=(slotFocusIdx-1+slots.length)%slots.length;
+    updateSlotTabindex(); slots[slotFocusIdx].focus();
+  }else if(e.key==='Delete'||e.key==='Backspace'){
+    e.preventDefault(); undoLastWord();
+  }else if(e.key==='Tab'&&e.shiftKey){
+    e.preventDefault();
+    var c=document.getElementById('word-bank-container');
+    if(c) c.focus();
+  }else if(e.key==='Tab'&&!e.shiftKey){
+    e.preventDefault(); var _rb=document.getElementById("restart-btn"); if(_rb) _rb.focus();
+  }
+}
+function undoLastWord(){
+  if(nextSlot<=0) return;
+  nextSlot--;
+  var returnedWord=cWords[nextSlot];
+  lockedSlots[nextSlot]=false;
+  scrambledWords.push(returnedWord);
+  bankFocusIdx=scrambledWords.length-1;
+  renderBank(); renderSlots();
+  announce('Undid. '+returnedWord+' back in bank.');
+  setTimeout(function(){
+    var c=document.getElementById('word-bank-container');
+    if(c) c.focus();
+  },80);
+}
+function updateBankTabindex(){ /* no-op: listbox container holds focus */ }
+function updateSlotTabindex(){getSlotBtns().forEach(function(s,i){s.setAttribute('tabindex',i===slotFocusIdx?'0':'-1');});}
+
+function tryWord(word,bankIdx){
+  if(nextSlot>=cWords.length)return;
+  if(word.toLowerCase()===cWords[nextSlot].toLowerCase()){
+    chime();
+    lockedSlots[nextSlot]=true; nextSlot++;
+    scrambledWords.splice(bankIdx,1);
+    // After correct word: go to first word in bank
+    bankFocusIdx=0;
+    renderBank(); renderSlots();
+    if(nextSlot===cWords.length){
+      showComplete();
+    }else{
+      var c=document.getElementById('word-bank-container');
+      if(scrambleReadOn){
+        var verseSoFar=cWords.slice(0,nextSlot).join(' ');
+        speakText(verseSoFar, function(){
+          if(c && scrambledWords.length){
+            c.scrollIntoView({block:'nearest',behavior:'instant'});
+            c.focus();
+            announce(scrambledWords[0]);
+          }
+        });
+      }else{
+        setTimeout(function(){
+          if(c && scrambledWords.length){
+            c.scrollIntoView({block:'nearest',behavior:'instant'});
+            c.focus();
+            announce(scrambledWords[0]);
+          }
+        },60);
+      }
+    }
+  }else{
+    buzz();
+    // After wrong word: keep bankFocusIdx on the word that was just tried
+    bankFocusIdx=bankIdx;
+    renderBank();
+    setTimeout(function(){
+      var c=document.getElementById('word-bank-container');
+      if(c){
+        c.scrollIntoView({block:'nearest',behavior:'instant'});
+        c.focus();
+        announce(scrambledWords[bankIdx]);
+      }
+    },80);
+  }
+}
+
+// ─── FILL-IN (letter-by-letter rejection) ────────────────────────────────────
+function buildFill(){
+  fillLocked=cWords.map(function(){return false;});
+  fillTyped=cWords.map(function(){return '';});
+  var grid=document.getElementById('fill-grid');
+  grid.innerHTML='';
+  cWords.forEach(function(w,i){
+    var row=document.createElement('div'); row.className='fill-row';
+    var hint=document.createElement('span'); hint.className='fill-hint';
+    hint.setAttribute('aria-hidden','true');
+    // Show word number, first letter, and length
+    hint.textContent=(i+1)+'. '+w[0].toUpperCase()+'('+w.length+')';
+    var inp=document.createElement('input');
+    inp.type='text'; inp.className='fill-input'; inp.id='fill-'+i;
+    inp.setAttribute('autocomplete','off'); inp.setAttribute('spellcheck','false');
+    inp.setAttribute('autocorrect','off'); inp.setAttribute('autocapitalize','none');
+    inp.setAttribute('aria-label',
+      'Word '+(i+1)+' of '+cWords.length
+      +'. Starts with '+w[0].toUpperCase()
+      +'. '+w.length+' letter'+(w.length!==1?'s':'')+'.');
+    // Letter-by-letter keydown handler
+    inp.addEventListener('keydown',function(e){ fillKeydown(e,i); });
+    // Block paste so you cannot paste in a word
+    inp.addEventListener('paste',function(e){e.preventDefault();});
+    row.appendChild(hint); row.appendChild(inp);
+    grid.appendChild(row);
+  });
+  // Focus first unlocked field
+  setTimeout(function(){focusNextFill(-1);},60);
+}
+
+function fillKeydown(e,i){
+  if(fillLocked[i]) return;
+  var inp=document.getElementById('fill-'+i);
+  var target=cWords[i];
+
+  // Allow navigation keys through
+  if(e.key==='Tab'||e.key==='Shift'||e.key==='ArrowLeft'||e.key==='ArrowRight'
+     ||e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='Home'||e.key==='End') return;
+
+  // Backspace — remove last typed letter
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    if(fillTyped[i].length>0){
+      fillTyped[i]=fillTyped[i].slice(0,-1);
+      inp.value=fillTyped[i];
+    }
+    return;
+  }
+
+  // Enter — only accepted when word is fully typed and correct (already locked by then)
+  if(e.key==='Enter'){
+    e.preventDefault();
+    // If somehow fully typed but not yet locked, check now
+    if(fillTyped[i].toLowerCase()===target.toLowerCase()){
+      lockFillWord(i);
+    }
+    return;
+  }
+
+  // Ignore non-printable / modifier keys
+  if(e.key.length!==1) return;
+  if(e.ctrlKey||e.altKey||e.metaKey) return;
+
+  e.preventDefault(); // We handle input ourselves
+
+  var nextPos=fillTyped[i].length;
+  if(nextPos>=target.length){
+    // Word already full length — buzz, word must be complete
+    buzz();
+    return;
+  }
+
+  var typedChar=e.key;
+  var expectedChar=target[nextPos];
+
+  if(typedChar.toLowerCase()===expectedChar.toLowerCase()){
+    // Correct letter
+    fillTyped[i]+=expectedChar; // use the canonical casing
+    inp.value=fillTyped[i];
+    // Check if word is now complete
+    if(fillTyped[i].length===target.length){
+      chime();
+      lockFillWord(i);
+    }
+    // No announcement per letter — only on word complete (handled in lockFillWord)
+  }else{
+    // Wrong letter — buzz and do NOT add it
+    buzz();
+  }
+}
+
+function lockFillWord(i){
+  fillLocked[i]=true;
+  var inp=document.getElementById('fill-'+i);
+  inp.className='fill-input locked';
+  inp.setAttribute('readonly','true');
+  inp.value=cWords[i];
+  // Update progress bar
+  var locked=fillLocked.filter(Boolean).length;
+  var total=cWords.length;
+  var pct=total>0?Math.round(locked/total*100):0;
+  var pb=document.getElementById('fill-progress-bar');
+  var pw=document.getElementById('fill-progress-wrap');
+  if(pb) pb.style.width=pct+'%';
+  if(pw){pw.setAttribute('aria-valuenow',pct);pw.setAttribute('aria-label','Fill-in progress: '+locked+' of '+total+' words correct');}
+
+  var allDone=fillLocked.every(function(v){return v;});
+  if(allDone){
+    showComplete();
+  }else{
+    setTimeout(function(){ focusNextFill(i); },80);
+  }
+}
+
+// Build verse text from locked words, blanks for the rest
+function buildVerseSoFar(){
+  return cWords.map(function(w,i){
+    return fillLocked[i]?w:'___';
+  }).join(' ');
+}
+
+// Build verse text from only the locked words in order (no blanks)
+function lockedWordsOnly(){
+  var out=[];
+  for(var i=0;i<cWords.length;i++){
+    if(fillLocked[i]) out.push(cWords[i]); else break;
+  }
+  return out.join(' ');
+}
+
+function focusNextFill(after){
+  for(var j=after+1;j<cWords.length;j++){
+    if(!fillLocked[j]){var el=document.getElementById('fill-'+j);if(el){el.focus();return;}}
+  }
+  // wrap from beginning
+  for(var j=0;j<after;j++){
+    if(!fillLocked[j]){var el=document.getElementById('fill-'+j);if(el){el.focus();return;}}
+  }
+  var _rb=document.getElementById("restart-btn"); if(_rb) _rb.focus();
+}
+
+
+// ─── CHUNK MODE ──────────────────────────────────────────────────────────────
+
+// Rhythm-aware phrase chunking — splits on natural speech boundaries
+// Priority: punctuation > coordinating conjunctions > subordinating/relative > prepositions
+// Uses composite scoring (break strength + closeness to ideal length) so chunks
+// land near 5 words and avoid very short or very long runs.
+
+var CHUNK_COORD  = /^(and|but|nor|yet|so)$/i;
+var CHUNK_SUBORD = /^(for|that|which|who|whom|whose|when|where|while|though|although|because|if|unless|until|since|as|after|before|even|then|therefore|thus|hence|whereas)$/i;
+var CHUNK_PREP   = /^(in|on|at|by|with|through|from|unto|upon|into|to|toward|towards|among|between|beside|beyond|against|within|without|beneath|above|below|over|under|around|throughout|during|across|along|near|per|via)$/i;
+
+function makeChunks(words){
+  if(!words||!words.length) return [];
+  var MAX=8, MIN=4, IDEAL=5;
+  var n=words.length;
+
+  // Assign a raw break score to each word position
+  var bs=new Array(n).fill(0);
+  for(var i=1;i<n;i++){
+    var p=words[i-1], w=words[i];
+    if(/[,;:!?.]$/.test(p)){ bs[i]=10; continue; }  // after punctuation — strongest
+    if(CHUNK_COORD.test(w)) { bs[i]=Math.max(bs[i],7); continue; } // "and/but/nor/yet/so"
+    if(CHUNK_SUBORD.test(w)){ bs[i]=Math.max(bs[i],5); continue; } // "that/who/for/when..."
+    if(CHUNK_PREP.test(w))  { bs[i]=Math.max(bs[i],2); }           // prepositions — weakest
+  }
+
+  // Greedy chunking with composite score: break_strength*3 + (10 - dist_from_ideal*2)
+  // This ensures a strong break wins over an ideal-length cut, but an unscored
+  // ideal-length cut beats a weak break far from ideal.
+  var chunks=[], start=0;
+  while(start<n){
+    var rem=n-start;
+    if(rem<=MAX){ chunks.push(words.slice(start).join(' ')); break; }
+
+    var lo=start+MIN, hi=Math.min(start+MAX,n-1);
+    var bestIdx=Math.min(start+IDEAL,hi), bestComp=-9999;
+    for(var j=lo;j<=hi;j++){
+      var dist=Math.abs((j-start)-IDEAL);
+      var comp=bs[j]*3+(10-dist*2);
+      if(comp>bestComp){ bestComp=comp; bestIdx=j; }
+    }
+    chunks.push(words.slice(start,bestIdx).join(' '));
+    start=bestIdx;
+  }
+
+  // Merge any chunk below MIN words into its nearest neighbor
+  var changed=true;
+  while(changed){
+    changed=false;
+    for(var ci=0;ci<chunks.length;ci++){
+      if(chunks[ci].split(/\s+/).length<MIN && chunks.length>1){
+        if(ci+1<chunks.length) chunks[ci+1]=chunks[ci]+' '+chunks[ci+1];
+        else                   chunks[ci-1]+=' '+chunks[ci];
+        chunks.splice(ci,1); changed=true; break;
+      }
+    }
+  }
+  return chunks;
+}
+function chunkFirstLetters(chunk){
+  return chunk.split(/\s+/).map(function(w){return w.charAt(0).toUpperCase();}).join(' ');
+}
+function focusHearChunkButton(){
+  var btn=document.getElementById('hear-chunk-btn');
+  if(btn && btn.offsetParent!==null){ btn.focus(); }
+}
+function buildChunkMode(){
+  chunks=makeChunks(cWords);
+  chunkIndex=0;
+  // Reset verse-so-far panel — hide and remove from tab order until first phrase done
+  var txt=document.getElementById('chunk-sofar-text');
+  if(txt){ txt.setAttribute('tabindex','-1'); txt.textContent=''; txt.setAttribute('aria-label','Verse so far'); }
+  renderChunk();
+  updateChunkReadBtn();
+  updateChunkSofarPanel();
+  setTimeout(focusHearChunkButton,80);
+}
+function renderChunk(silent){
+  var current=document.getElementById('chunk-current');
+  var hint=document.getElementById('chunk-hint');
+  var input=document.getElementById('chunk-answer');
+  var prog=document.getElementById('chunk-progress');
+  if(!chunks.length) return;
+  var chunk=chunks[chunkIndex];
+  chunkTyped='';
+  current.textContent='Chunk '+(chunkIndex+1)+' of '+chunks.length;
+  hint.textContent='First letters: '+chunkFirstLetters(chunk)+'  \u2014  '+chunk.split(/\s+/).length+' words';
+  input.value='';
+  input.className='chunk-input';
+  prog.textContent='Completed '+chunkIndex+' of '+chunks.length+' chunks.';
+}
+function completeChunk(){
+  var input=document.getElementById('chunk-answer');
+  chime();
+  input.className='chunk-input chunk-complete';
+  chunkIndex++;
+  var sofar=chunks.slice(0,chunkIndex).join(' ');
+  updateChunkSofarPanel();
+  if(chunkIndex>=chunks.length){
+    showComplete(sofar);
+  }else{
+    if(chunkReadOn){
+      speakText(sofar, function(){
+        renderChunk(true);
+        focusHearChunkButton();
+      });
+    }else{
+      renderChunk(true);
+      focusHearChunkButton();
+    }
+  }
+}
+function chunkKeydown(e){
+  if(!chunks.length) return;
+  var input=document.getElementById('chunk-answer');
+  var target=chunks[chunkIndex];
+
+  if(e.key==='Tab'||e.key==='Shift'||e.key==='ArrowLeft'||e.key==='ArrowRight'||
+     e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='Home'||e.key==='End') return;
+
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    if(chunkTyped.length>0){
+      chunkTyped=chunkTyped.slice(0,-1);
+      input.value=chunkTyped;
+    }
+    return;
+  }
+
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(chunkTyped.length===target.length) completeChunk();
+    return;
+  }
+
+  if(e.key.length!==1) return;
+  if(e.ctrlKey||e.altKey||e.metaKey) return;
+  e.preventDefault();
+
+  var nextPos=chunkTyped.length;
+  if(nextPos>=target.length){
+    buzz();
+    completeChunk();
+    return;
+  }
+
+  var typedChar=e.key;
+  var expectedChar=target[nextPos];
+  if(typedChar.toLowerCase()===expectedChar.toLowerCase()){
+    chunkTyped+=expectedChar;
+    input.value=chunkTyped;
+    if(chunkTyped.length===target.length) completeChunk();
+  }else{
+    buzz();
+  }
+}
+function revealChunk(){
+  if(!chunks.length) return;
+  var chunk=chunks[chunkIndex];
+  chunkTyped=chunk;
+  document.getElementById('chunk-answer').value=chunk;
+  // Cancel any JAWS speech before natural voice starts
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  speakText(chunk);
+  // Do NOT also call announce() — that would let JAWS talk at the same time
+}
+
+document.getElementById('chunk-answer').addEventListener('keydown',chunkKeydown);
+document.getElementById('chunk-answer').addEventListener('paste',function(e){ e.preventDefault(); });
+document.getElementById('hear-chunk-btn').addEventListener('click',function(){
+  if(chunks.length){
+    try{ window.speechSynthesis.cancel(); }catch(e){}
+    speakText(chunks[chunkIndex], function(){
+      var el=document.getElementById('chunk-answer');
+      if(el) el.focus();
+    });
+  }
+});
+
+// ─── PHRASE BUILDER READ-SO-FAR TOGGLE ───────────────────────────────────────
+function updateChunkReadBtn(){
+  var btn=document.getElementById('chunk-read-toggle-btn');
+  if(!btn) return;
+  btn.textContent='Read verse so far: '+(chunkReadOn?'On':'Off');
+  btn.setAttribute('aria-pressed', chunkReadOn?'true':'false');
+}
+function updateChunkSofarPanel(){
+  var panel=document.getElementById('chunk-sofar-panel');
+  var txt=document.getElementById('chunk-sofar-text');
+  if(!panel||!txt) return;
+  if(chunkIndex===0){
+    // Nothing completed yet — hide panel and remove from tab order
+    panel.style.display='none';
+    txt.setAttribute('tabindex','-1');
+    return;
+  }
+  var sofar=chunks.slice(0,chunkIndex).join(' ');
+  txt.textContent=sofar;
+  // Update aria-label to include the full text so JAWS reads it when tabbed to
+  txt.setAttribute('aria-label','Verse so far: '+sofar);
+  panel.style.display='';
+  txt.setAttribute('tabindex','0'); // back in tab order now that there's content
+}
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id==='chunk-read-toggle-btn'){
+    chunkReadOn=!chunkReadOn;
+    try{ localStorage.setItem(CHUNK_READ_KEY,chunkReadOn?'1':'0'); }catch(ex){}
+    updateChunkReadBtn();
+    updateChunkSofarPanel();
+    announce('Read verse so far '+(chunkReadOn?'on':'off')+'.');
+  }
+});
+
+document.getElementById('cloze-hear-btn').addEventListener('click',function(){
+  if(!clozeBlanks.length) return;
+  var bi=clozeCurrentBi;
+  var wi=clozeBlanks[bi];
+  if(wi===undefined) return;
+  var beforeText=cWords.slice(0,wi).join(' ');
+  var blankLabel='missing word '+(bi+1)+' of '+clozeBlanks.length
+    +'. Starts with '+cWords[wi][0].toUpperCase()
+    +'. '+cWords[wi].length+' letter'+(cWords[wi].length!==1?'s':'');
+  var speechText=(beforeText ? beforeText+' … ' : '')+blankLabel;
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  speakText(speechText, function(){
+    var inp=document.getElementById('cloze-inp-'+bi);
+    if(inp) inp.focus();
+  });
+});
+
+// ─── COMPLETE ─────────────────────────────────────────────────────────────────
+function showComplete(naturalReadText){
+  var fb=document.getElementById('feedback');
+  fb.className='correct';
+  fanfare();
+  setTimeout(function(){ fb.classList.add('complete-shimmer'); },200);
+
+  // Count this game as done for the current verse
+  verseGamesCompleted++;
+  var allFiveDone = (verseGamesCompleted >= GAME_MODE_ORDER.length);
+
+  if(allFiveDone){
+    // All 5 complete — save to memorized and celebrate
+    saveMemorized();
+    var msg='All five games complete! '+cRef+' has been added to your memorized verses.';
+    fb.textContent=msg;
+    fb.style.display='block';
+    if(naturalReadText){
+      speakText(naturalReadText, function(){
+        announce(msg);
+        // Reset counter so verse can be cycled again if desired
+        verseGamesCompleted=0;
+        // Focus restart button so user can choose what to do next
+        setTimeout(function(){
+          var rb=document.getElementById('restart-btn');
+          if(rb) rb.focus();
+        },100);
+      });
+    } else {
+      announce(msg);
+      verseGamesCompleted=0;
+      setTimeout(function(){
+        var rb=document.getElementById('restart-btn');
+        if(rb) rb.focus();
+      },100);
+    }
+  } else {
+    // More games to go — auto-start the next one
+    var currentIdx = GAME_MODE_ORDER.indexOf(cMode);
+    var nextMode   = GAME_MODE_ORDER[(currentIdx + 1) % GAME_MODE_ORDER.length];
+    var remaining  = GAME_MODE_ORDER.length - verseGamesCompleted;
+    var progressMsg = 'Great work! '+verseGamesCompleted+' of 5 done. Starting '+modeName(nextMode)+'.';
+    fb.textContent=progressMsg;
+    fb.style.display='block';
+
+    if(naturalReadText){
+      speakText(naturalReadText, function(){
+        announce(progressMsg);
+        advanceToNextGame(nextMode);
+      });
+    } else {
+      announce(progressMsg);
+      advanceToNextGame(nextMode);
+    }
+  }
+}
+
+function focusFirstGameElement(){
+  // Focus the first interactive element for the current game mode
+  setTimeout(function(){
+    if(cMode==='chunk'){
+      // Phrase Builder — focus Hear phrase button
+      var btn=document.getElementById('hear-chunk-btn');
+      if(btn && btn.offsetParent!==null){ btn.focus(); return; }
+    }
+    if(cMode==='firstletter'){
+      // First letter fill-in — focus first unlocked input
+      var inputs=document.querySelectorAll('.fill-input:not(.locked)');
+      if(inputs.length){ inputs[0].focus(); return; }
+    }
+    if(cMode==='scramble'){
+      // Word scramble — focus word bank container
+      var bank=document.getElementById('word-bank-container');
+      if(bank && bank.offsetParent!==null){ bank.focus(); return; }
+    }
+    if(cMode==='cloze'){
+      // Missing word — focus first blank input
+      var first=document.querySelector('#cloze-verse input');
+      if(first){ first.focus(); return; }
+    }
+    if(cMode==='multiplechoice'){
+      // Multiple choice — first choice button (renderMCQuestion already handles this,
+      // but call it again in case timing differs)
+      var btn=document.querySelector('#mc-choices .mc-choice-btn');
+      if(btn){ btn.focus(); return; }
+    }
+  }, 150);
+}
+
+// Order of game modes for cycling on completion
+var GAME_MODE_ORDER = ['chunk','firstletter','scramble','cloze','multiplechoice'];
+
+function advanceToNextGame(nextMode){
+  // Silently select the next radio button
+  var radios = Array.from(document.querySelectorAll('input[name="mode"]'));
+  var nextRadio = radios.find(function(r){ return r.value === nextMode; });
+  if(nextRadio) nextRadio.checked = true;
+
+  // Hide feedback and start the next game after a short pause
+  setTimeout(function(){
+    document.getElementById('feedback').style.display='none';
+    beginGame(cRef, cVerse);
+    focusFirstGameElement();
+  }, 900);
+}
+
+// ─── GAME BUTTONS ─────────────────────────────────────────────────────────────
+document.getElementById('loop-btn').addEventListener('click',function(){
+  focusLock(this, function(){ if(loopActive) stopLoop(); else startLoop(); });
+});
+document.getElementById('stop-loop-btn').addEventListener('click',function(){
+  var btn=this;
+  focusLock(btn, function(){ stopLoop(); announce('Loop stopped.'); });
+});
+document.getElementById('restart-btn').addEventListener('click',function(){
+  var btn=this;
+  document.getElementById('feedback').style.display='none';
+  beginGame(cRef,cVerse);
+  announce('Restarting '+cRef+'.');
+  setTimeout(function(){
+    stopFocusGuard();
+    var gh=document.getElementById('game-heading');
+    if(gh){ gh.setAttribute('tabindex','-1'); gh.focus(); }
+  },200);
+});
+document.getElementById('new-verse-btn').addEventListener('click',function(){
+  stopLoop(); stopFocusGuard();
+  document.getElementById('game-section').style.display='none';
+  document.getElementById('feedback').style.display='none';
+  setVerseError('');
+  document.getElementById('verse-status').textContent='Choose from the list or add your own verse above.';
+  announce('Game closed.');
+  setTimeout(function(){ document.getElementById('custom-ref-input').focus(); },80);
+});
+
+// ─── PLAY ALL MEMORIZED VERSES ────────────────────────────────────────────────
+function setPlayAllStatus(msg){
+  var el=document.getElementById('play-all-status');
+  if(!el) return;
+  el.textContent=msg;
+  el.style.display=msg?'':'none';
+}
+function stopPlayAll(){
+  playAllActive=false;
+  try{ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }catch(e){}
+  var btn=document.getElementById('play-all-btn');
+  if(btn){ btn.textContent='Play all verses'; btn.className=''; }
+  setPlayAllStatus('');
+}
+function startPlayAll(){
+  var refs=Object.keys(VERSES).sort(sortRefs);
+  if(!refs.length){ return; }
+  stopLoop();
+  playAllActive=true;
+  playAllIdx=0;
+  var btn=document.getElementById('play-all-btn');
+  if(btn){ btn.textContent='Playing all verses…'; btn.className='loop-on'; }
+  function playNext(){
+    if(!playAllActive) return;
+    if(playAllIdx>=refs.length){
+      playAllIdx=0;
+      if(!playAllActive) return;
+    }
+    var ref=refs[playAllIdx];
+    var text=VERSES[ref];
+    var total=refs.length;
+    var num=playAllIdx+1;
+    setPlayAllStatus('Playing '+num+' of '+total+': '+ref);
+    playAllIdx++;
+    speakText(ref+'. '+text, function(){
+      if(playAllActive){
+        setTimeout(playNext, 2000);
+      }
+    });
+  }
+  playNext();
+}
+document.getElementById('play-all-btn').addEventListener('click', function(){
+  if(playAllActive){ stopPlayAll(); } else { startPlayAll(); }
+});
+document.getElementById('stop-all-btn').addEventListener('click', function(){
+  stopPlayAll();
+});
+
+// ─── MEMORIZED ────────────────────────────────────────────────────────────────
+function saveMemorized(){
+  var list=loadMemList();
+  if(!list.find(function(v){return v.ref===cRef;})){
+    list.push({ref:cRef,text:cVerse});
+    try{localStorage.setItem(MEM_KEY,JSON.stringify(list));}catch(e){}
+  }
+  renderMemorized(list);
+}
+function loadMemList(){
+  try{var r=localStorage.getItem(MEM_KEY);return r?JSON.parse(r):[];}catch(e){return[];}
+}
+function getBookName(ref){
+  // Strip leading verse number (e.g. "1 Corinthians") and chapter:verse to get book name
+  var m=ref.match(/^(\d\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)?/);
+  return m?m[0].trim():'';
+}
+function renderMemorized(list){
+  var ul=document.getElementById('memorized-list');
+  var ep=document.getElementById('mem-empty');
+  ul.innerHTML='';
+  if(!list.length){ep.style.display='';return;}
+  ep.style.display='none';
+  list.forEach(function(v){
+    var li=document.createElement('li'); li.className='mem-item';
+    // Full verse reference as an h3 for JAWS heading navigation
+    var h=document.createElement('h3');
+    h.textContent=v.ref;
+    h.style.cssText='margin:0 0 6px 0;color:#102045;font-size:19px;font-family:"Playfair Display",serif;';
+    var verseEl=document.createElement('div'); verseEl.className='mem-verse-text';
+    verseEl.textContent=v.text;
+    var actions=document.createElement('div'); actions.className='mem-actions';
+    function mkBtn(lbl,aria,fn){
+      var b=document.createElement('button'); b.className='small';
+      b.textContent=lbl; b.setAttribute('aria-label',aria);
+      b.addEventListener('click',fn); return b;
+    }
+    actions.appendChild(mkBtn('Practice','Practice '+v.ref+' in current game mode',function(){
+      beginGame(v.ref,v.text);
+      setTimeout(function(){
+        var gh=document.getElementById('game-heading');
+        if(gh){ gh.setAttribute('tabindex','-1'); gh.focus(); }
+      },150);
+    }));
+    actions.appendChild(mkBtn('Remove','Remove '+v.ref+' from memorized list',function(){
+      var updated=loadMemList().filter(function(x){return x.ref!==v.ref;});
+      try{localStorage.setItem(MEM_KEY,JSON.stringify(updated));}catch(e){}
+      renderMemorized(updated); announce(v.ref+' removed from memorized list.');
+    }));
+    li.appendChild(h); li.appendChild(verseEl); li.appendChild(actions);
+    ul.appendChild(li);
+  });
+}
+
+
+
+// ─── EXCEL WORKBOOK IMPORT FROM VERSE SHEET ──────────────────────────────────
+function cleanImportedVerseText(text){
+  return String(text||'')
+    .replace(/[\r\n\t]+/g,' ')
+    .replace(/[.,;:!?()\[\]{}"'“”‘’`´\-–—…\/\\|@#$%^&*+=<>~]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function looksLikeRef(v){
+  var s=String(v||'').trim();
+  return /^[1-3]?\s?[A-Za-z]+(?:\s+[A-Za-z]+)?\s+\d{1,3}:\d{1,3}(?:[-–]\d{1,3})?$/.test(s);
+}
+function cleanRef(v){ return String(v||'').replace(/\s+/g,' ').trim(); }
+function headerIndex(headers,names){
+  for(var i=0;i<headers.length;i++){
+    var h=String(headers[i]||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    for(var j=0;j<names.length;j++) if(h===names[j]) return i;
+  }
+  return -1;
+}
+function rowsToVerses(rows){
+  var found={};
+  if(!rows || !rows.length) return found;
+
+  // Bible.xlsm Verse sheet: verse text is always in column D (index 3, NIV 1985).
+  // Reference is found by scanning each row for a cell that looks like a Bible ref.
+  // Skip row 0 (header row).
+  for(var r=1;r<rows.length;r++){
+    var row=rows[r]||[];
+    var text=cleanImportedVerseText(row[3]);
+    if(!text || text.split(/\s+/).length<3) continue;
+    var ref='';
+    for(var c=0;c<row.length;c++){
+      var candidate=cleanRef(row[c]);
+      if(looksLikeRef(candidate)){ ref=candidate; break; }
+    }
+    if(ref) found[ref]=text;
+  }
+  return found;
+}
+function importExcelWorkbook(file){
+  if(!window.XLSX){
+    setVerseError('Excel reader did not load. Connect to the internet once, reopen this file, and press Check Excel workbook again.');
+    announce('Excel reader did not load. Connect to the internet once and try again.');
+    return;
+  }
+  document.getElementById('verse-status').textContent='Checking workbook. Looking only for the sheet named Verse.';
+  announce('Checking workbook. Looking for the Verse sheet.');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    setTimeout(function(){
+      try{
+        var data=e.target.result;
+        var nameBook=XLSX.read(data,{type:'array',bookSheets:true});
+        var names=nameBook.SheetNames||[];
+        var sheetName=null;
+        for(var i=0;i<names.length;i++){
+          if(String(names[i]).trim().toLowerCase()==='verse'){ sheetName=names[i]; break; }
+        }
+        if(!sheetName){
+          setVerseError('I could not find a sheet named Verse. Sheets found: '+names.join(', '));
+          announce('No sheet named Verse was found.');
+          return;
+        }
+        var wb=XLSX.read(data,{type:'array',sheets:sheetName,sheetRows:2000,cellFormula:false,cellHTML:false,cellStyles:false});
+        var ws=wb.Sheets[sheetName];
+        if(!ws){ setVerseError('The Verse sheet was found but could not be opened.'); announce('The Verse sheet could not be opened.'); return; }
+        var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:false});
+        var imported=rowsToVerses(rows);
+        var refs=Object.keys(imported);
+        if(!refs.length){
+          setVerseError('I found the Verse sheet, but could not identify the reference and verse text columns. Built-in verses are still available.');
+          announce('Verse sheet found, but no verse rows were identified. Built-in verses are still available.');
+          populateVerseSelect();
+          return;
+        }
+        var added=0, updated=0;
+        refs.forEach(function(ref){ if(VERSES[ref]) updated++; else added++; VERSES[ref]=imported[ref]; });
+        populateVerseSelect();
+        setVerseError('');
+        document.getElementById('verse-status').textContent='Bible.xlsm import complete (column D, NIV 1985). Added '+added+' new verse'+(added!==1?'s':'')+' and updated '+updated+'. Total verses now: '+Object.keys(VERSES).length+'.';
+        announce('Bible.xlsm import complete. Added '+added+' new verses and updated '+updated+'.');
+      }catch(err){
+        setVerseError('Could not read the Verse sheet. Built-in verses are still available.');
+        announce('Could not read the Verse sheet. Built-in verses are still available.');
+        populateVerseSelect();
+      }
+    },80);
+  };
+  reader.onerror=function(){
+    setVerseError('The browser could not open that file. Close the workbook in Excel and try again.');
+    announce('The browser could not open that file.');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ─── FOCUS GUARDIAN ──────────────────────────────────────────────────────────
+// On iOS VoiceOver any DOM mutation (text change, class change, new elements)
+// can cause focus to escape. We store the intended focus target and a
+// MutationObserver restores it if focus moves away during mutations.
+var _focusGuardTarget = null;
+var _focusGuardObserver = null;
+
+function startFocusGuard(el){
+  stopFocusGuard();
+  _focusGuardTarget = el;
+  try{
+    _focusGuardObserver = new MutationObserver(function(){
+      if(_focusGuardTarget && document.activeElement !== _focusGuardTarget){
+        _focusGuardTarget.focus();
+      }
+    });
+    _focusGuardObserver.observe(document.body, {childList:true, subtree:true, attributes:true, characterData:true});
+  }catch(e){}
+}
+function stopFocusGuard(){
+  _focusGuardTarget = null;
+  if(_focusGuardObserver){ try{ _focusGuardObserver.disconnect(); }catch(e){} _focusGuardObserver = null; }
+}
+
+// Call before any button action that causes DOM changes.
+// Starts the guard, runs the action, stops the guard after speech ends or 3s.
+function focusLock(btn, action){
+  startFocusGuard(btn);
+  action();
+  // Stop guarding after 3s max (speech may still be playing — handled separately)
+  setTimeout(stopFocusGuard, 3000);
+}
+
+// ─── PLAY/PAUSE TOGGLE (sticky bar + spacebar) ────────────────────────────────
+var _audioBarPlaying=false;
+function updateAudioBar(){
+  var btn=document.getElementById('audio-toggle-btn');
+  if(!btn) return;
+  if(_audioBarPlaying){btn.textContent='⏸ Pause';btn.setAttribute('aria-label','Pause verse audio');}
+  else{btn.textContent='▶ Play';btn.setAttribute('aria-label','Play verse audio');}
+}
+function toggleAudio(){
+  if(_audioBarPlaying){
+    try{window.speechSynthesis.cancel();}catch(e){}
+    _audioBarPlaying=false;updateAudioBar();
+  } else {
+    if(!cVerse){announce('Load a verse first.');return;}
+    _audioBarPlaying=true;updateAudioBar();
+    speakText(cRef+'. '+cVerse,function(){_audioBarPlaying=false;updateAudioBar();});
+  }
+}
+document.getElementById('audio-toggle-btn').addEventListener('click',function(e){
+  e.preventDefault();
+  var btn=this;
+  startFocusGuard(btn); // guard stays active until speakText onend calls stopFocusGuard
+  toggleAudio();
+  // Also enforce at 100ms in case speech hasn't started yet
+  setTimeout(function(){ if(_focusGuardTarget===btn && document.activeElement!==btn) btn.focus(); },100);
+});
+document.addEventListener('keydown',function(e){
+  if(e.code!=='Space') return;
+  if(e.ctrlKey||e.altKey||e.metaKey) return;
+  var el=document.activeElement||document.body;
+  var tag=el.tagName||'';
+  // Always let Space type in text fields
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+  // Word bank uses Space to select words — leave it alone
+  if(el.id==='word-bank-container') return;
+  // Let Space activate non-play/pause buttons normally
+  var isOwnPlayBtn = (el.id==='med-play-btn'||el.id==='med-pause-btn'||el.id==='audio-toggle-btn');
+  if(tag==='BUTTON' && !isOwnPlayBtn) return;
+
+  e.preventDefault();
+
+  // If meditation is playing or paused, space controls meditation
+  if(medPlaying||medPaused){
+    medUnlockAudioContext();
+    if(medPlaying){ medPause(); } else { medPlay(); }
+    // Focus the now-visible play or pause button after state flips
+    setTimeout(function(){
+      var btn=document.getElementById(medPlaying?'med-pause-btn':'med-play-btn');
+      if(btn && btn.style.display!=='none') btn.focus();
+    },50);
+  } else {
+    // Otherwise toggle the sticky-bar game audio
+    toggleAudio();
+  }
+});
+document.getElementById('hc-toggle-btn').addEventListener('click',function(e){
+  e.preventDefault();
+  var btn=this;
+  startFocusGuard(btn);
+  toggleHighContrast();
+  setTimeout(function(){ stopFocusGuard(); btn.focus(); }, 500);
+});
+
+document.getElementById('undo-word-btn').addEventListener('click', undoLastWord);
+
+// ─── SCRAMBLE READ-SO-FAR TOGGLE ─────────────────────────────────────────────
+function updateScrambleReadBtn(){
+  var btn=document.getElementById('scramble-read-toggle-btn');
+  if(!btn) return;
+  btn.textContent='Read verse so far: '+(scrambleReadOn?'On':'Off');
+  btn.setAttribute('aria-pressed', scrambleReadOn?'true':'false');
+}
+document.getElementById('scramble-read-toggle-btn').addEventListener('click',function(){
+  scrambleReadOn=!scrambleReadOn;
+  try{ localStorage.setItem(SCRAMBLE_READ_KEY,scrambleReadOn?'1':'0'); }catch(e){}
+  updateScrambleReadBtn();
+  announce('Read verse so far '+(scrambleReadOn?'on':'off')+'.');
+});
+updateScrambleReadBtn(); // set correct label on load
+
+// ─── CLOZE (MISSING WORD) MODE ───────────────────────────────────────────────
+var clozeBlanks=[];   // indices of words that are blanked
+var clozeLocked=[];   // parallel to cWords — true when that blank is correct
+var clozeTyped=[];    // typed string for each blank
+var clozeCurrentBi=0; // which blank currently has focus
+var _clozeProgrammaticFocus=false;
+
+function buildCloze(){
+  // Pick ~30% of words as blanks, minimum 2, maximum ~8
+  var n=cWords.length;
+  var numBlanks=Math.max(2,Math.min(8,Math.round(n*0.3)));
+  // Space them out evenly with randomness
+  var pool=[];
+  for(var i=1;i<n-1;i++) pool.push(i); // avoid first and last word
+  // shuffle pool
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pool[i];pool[i]=pool[j];pool[j]=t;}
+  clozeBlanks=pool.slice(0,numBlanks).sort(function(a,b){return a-b;});
+  clozeLocked=clozeBlanks.map(function(){return false;});
+  clozeTyped=clozeBlanks.map(function(){return '';});
+  renderCloze();
+  updateClozeProgress();
+  // Focus first blank via natural voice only — suppress the focus handler
+  setTimeout(function(){
+    var el=document.getElementById('cloze-inp-0');
+    if(!el) return;
+    clozeCurrentBi=0;
+    var wi=clozeBlanks[0];
+    var beforeText=cWords.slice(0,wi).join(' ');
+    var blankLabel='missing word 1 of '+clozeBlanks.length
+      +'. Starts with '+cWords[wi][0].toUpperCase()
+      +'. '+cWords[wi].length+' letters';
+    var speechText=(beforeText ? beforeText+' … ' : '')+blankLabel;
+    _clozeProgrammaticFocus=true;
+    el.focus();
+    setTimeout(function(){
+      _clozeProgrammaticFocus=false;
+      try{ window.speechSynthesis.cancel(); }catch(e){}
+      speakText(speechText);
+    },60);
+  },80);
+}
+
+function renderCloze(){
+  var container=document.getElementById('cloze-verse');
+  container.innerHTML='';
+  var blankMap={};
+  clozeBlanks.forEach(function(wi,bi){ blankMap[wi]=bi; });
+
+  cWords.forEach(function(w,i){
+    if(blankMap[i]!==undefined){
+      var bi=blankMap[i];
+      var span=document.createElement('span');
+      span.className='cloze-blank';
+      var inp=document.createElement('input');
+      inp.type='text';
+      inp.id='cloze-inp-'+bi;
+      inp.setAttribute('autocomplete','off');
+      inp.setAttribute('autocorrect','off');
+      inp.setAttribute('autocapitalize','none');
+      inp.setAttribute('spellcheck','false');
+      inp.style.width=Math.max(60, w.length*14+20)+'px';
+      inp.setAttribute('aria-label',
+        'Missing word '+(bi+1)+' of '+clozeBlanks.length
+        +'. Starts with '+w[0].toUpperCase()
+        +'. '+w.length+' letter'+(w.length!==1?'s':'')+'.');
+      if(clozeLocked[bi]){
+        inp.className='locked';
+        inp.value=cWords[clozeBlanks[bi]];
+        inp.setAttribute('readonly','true');
+      } else {
+        inp.value=clozeTyped[bi]||'';
+        inp.addEventListener('keydown',function(e){ clozeKeydown(e,bi); });
+        inp.addEventListener('paste',function(e){e.preventDefault();});
+        // On focus: if user tabbed here manually, read verse up to this blank via natural voice.
+        // If we moved focus programmatically (after a correct word), skip — lockClozeWord handles that.
+        inp.addEventListener('focus',function(){
+          if(_clozeProgrammaticFocus) return;
+          clozeCurrentBi=bi;
+          var wi=clozeBlanks[bi];
+          var beforeWords=cWords.slice(0,wi);
+          var beforeText=beforeWords.length ? beforeWords.join(' ')+' … ' : '';
+          var blankLabel='missing word '+(bi+1)+' of '+clozeBlanks.length+': starts with '+cWords[wi][0].toUpperCase()+', '+cWords[wi].length+' letters';
+          try{ window.speechSynthesis.cancel(); }catch(ex){}
+          speakText(beforeText+blankLabel);
+        });
+      }
+      span.appendChild(inp);
+      container.appendChild(span);
+    } else {
+      var span=document.createElement('span');
+      span.textContent=w+' ';
+      span.setAttribute('aria-hidden','false');
+      container.appendChild(span);
+    }
+  });
+}
+
+function clozeKeydown(e,bi){
+  if(clozeLocked[bi]) return;
+  var wi=clozeBlanks[bi];
+  var target=cWords[wi];
+  var inp=document.getElementById('cloze-inp-'+bi);
+
+  if(e.key==='Tab'||e.key==='Shift'||e.key==='ArrowLeft'||e.key==='ArrowRight'
+     ||e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='Home'||e.key==='End') return;
+
+  if(e.key==='Backspace'){
+    e.preventDefault();
+    if(clozeTyped[bi].length>0){
+      clozeTyped[bi]=clozeTyped[bi].slice(0,-1);
+      inp.value=clozeTyped[bi];
+    }
+    return;
+  }
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(clozeTyped[bi].toLowerCase()===target.toLowerCase()) lockClozeWord(bi);
+    return;
+  }
+  if(e.key.length!==1) return;
+  if(e.ctrlKey||e.altKey||e.metaKey) return;
+  e.preventDefault();
+
+  var nextPos=clozeTyped[bi].length;
+  if(nextPos>=target.length){ buzz(); return; }
+
+  var typedChar=e.key;
+  var expectedChar=target[nextPos];
+  if(typedChar.toLowerCase()===expectedChar.toLowerCase()){
+    clozeTyped[bi]+=expectedChar;
+    inp.value=clozeTyped[bi];
+    if(clozeTyped[bi].length===target.length){
+      chime();
+      lockClozeWord(bi);
+    }
+  } else {
+    buzz();
+  }
+}
+
+function lockClozeWord(bi){
+  clozeLocked[bi]=true;
+  var inp=document.getElementById('cloze-inp-'+bi);
+  if(inp){
+    inp.className='locked';
+    inp.value=cWords[clozeBlanks[bi]];
+    inp.setAttribute('readonly','true');
+  }
+  updateClozeProgress();
+  var allDone=clozeLocked.every(function(v){return v;});
+  if(allDone){
+    showComplete();
+    return;
+  }
+  // Find next unlocked blank index
+  var nextBi=-1;
+  for(var nb=bi+1;nb<clozeBlanks.length;nb++){
+    if(!clozeLocked[nb]){ nextBi=nb; break; }
+  }
+  if(nextBi===-1){
+    for(var nb=0;nb<bi;nb++){
+      if(!clozeLocked[nb]){ nextBi=nb; break; }
+    }
+  }
+  if(nextBi===-1){ showComplete(); return; }
+
+  clozeCurrentBi=nextBi;
+  var nextWi=clozeBlanks[nextBi];
+  var beforeText=cWords.slice(0,nextWi).join(' ');
+  var blankLabel='next: missing word '+(nextBi+1)+' of '+clozeBlanks.length
+    +'. Starts with '+cWords[nextWi][0].toUpperCase()
+    +'. '+cWords[nextWi].length+' letters';
+  var speechText=(beforeText ? beforeText+' … ' : '')+blankLabel;
+
+  _clozeProgrammaticFocus=true;
+  var nextEl=document.getElementById('cloze-inp-'+nextBi);
+  if(nextEl){
+    // Scroll into view first so the browser doesn't jump focus to the top
+    nextEl.scrollIntoView({block:'nearest',behavior:'instant'});
+    nextEl.focus();
+  }
+
+  setTimeout(function(){
+    _clozeProgrammaticFocus=false;
+    try{ window.speechSynthesis.cancel(); }catch(e){}
+    speakText(speechText);
+  }, 60);
+}
+
+function updateClozeProgress(){
+  var done=clozeLocked.filter(Boolean).length;
+  var total=clozeBlanks.length;
+  var pct=total>0?Math.round(done/total*100):0;
+  var pb=document.getElementById('cloze-progress-bar');
+  var pw=document.getElementById('cloze-progress-wrap');
+  var txt=document.getElementById('cloze-progress-txt');
+  if(pb) pb.style.width=pct+'%';
+  // Keep aria-label static — dynamic label changes cause JAWS to jump focus
+  if(pw) pw.setAttribute('aria-valuenow',pct);
+  // Update the visible/spoken text span — aria-live="assertive" on that span
+  if(txt) txt.textContent=done+' of '+total+' blanks filled.';
+}
+
+// ─── MULTIPLE CHOICE MODE ────────────────────────────────────────────────────
+var mcIndex=0;   // current word position being answered
+var mcCorrect=[]; // parallel to cWords — true when locked
+
+function buildMultipleChoice(){
+  mcIndex=0;
+  mcCorrect=cWords.map(function(){return false;});
+  renderMCVerse();
+  renderMCQuestion();
+  updateMCProgress();
+}
+
+function renderMCVerse(){
+  var el=document.getElementById('mc-verse-display');
+  el.innerHTML='';
+  cWords.forEach(function(w,i){
+    var span=document.createElement('span');
+    if(mcCorrect[i]){
+      span.textContent=w+' ';
+      span.style.fontWeight='800';
+      span.style.color='var(--success)';
+    } else if(i===mcIndex){
+      span.textContent='_____ ';
+      span.style.fontWeight='800';
+      span.style.color=getComputedStyle(document.documentElement).getPropertyValue('--navy-light')||'#2a5298';
+      span.style.borderBottom='3px solid currentColor';
+    } else {
+      span.textContent=w+' ';
+      span.style.color='#888';
+    }
+    el.appendChild(span);
+  });
+  // Visual display only — JAWS gets spoken feedback via natural voice and mc-word-label
+}
+
+function getDecoys(correctWord, count){
+  // Pull decoys from all words in all verses
+  var pool=[];
+  Object.values(VERSES).forEach(function(v){
+    v.split(/\s+/).forEach(function(w){
+      if(w.toLowerCase()!==correctWord.toLowerCase() && w.length>1) pool.push(w);
+    });
+  });
+  // Also include nearby words from current verse
+  cWords.forEach(function(w){ if(w.toLowerCase()!==correctWord.toLowerCase()) pool.push(w); });
+  // Shuffle and dedupe
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pool[i];pool[i]=pool[j];pool[j]=t;}
+  var seen={};
+  var out=[];
+  for(var i=0;i<pool.length&&out.length<count;i++){
+    var lw=pool[i].toLowerCase();
+    if(!seen[lw]){seen[lw]=true;out.push(pool[i]);}
+  }
+  return out;
+}
+
+function renderMCQuestion(){
+  var correct=cWords[mcIndex];
+  var decoys=getDecoys(correct,3);
+  var choices=[correct].concat(decoys.slice(0,3));
+  // Shuffle choices
+  for(var i=choices.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=choices[i];choices[i]=choices[j];choices[j]=t;}
+
+  var label=document.getElementById('mc-word-label');
+  label.textContent='Word '+(mcIndex+1)+' of '+cWords.length+'.';
+
+  var container=document.getElementById('mc-choices');
+  container.innerHTML='';
+  // Trigger fade-in animation on the choices container (decorative)
+  container.classList.remove('mc-entering');
+  void container.offsetWidth;
+  container.classList.add('mc-entering');
+  choices.forEach(function(w,ci){
+    var btn=document.createElement('button');
+    btn.className='mc-choice-btn';
+    btn.textContent=(ci+1)+'. '+w;
+    btn.setAttribute('aria-label','Choice '+(ci+1)+': '+w);
+    btn.setAttribute('data-word',w);
+    btn.setAttribute('data-idx',ci);
+    btn.addEventListener('click',function(){ mcPick(w,btn,choices); });
+    container.appendChild(btn);
+  });
+
+  // keyboard 1-4 shortcuts AND first-letter navigation
+  container._mcKeyHandler=function(e){
+    var n=parseInt(e.key);
+    if(n>=1&&n<=choices.length){
+      e.preventDefault();
+      var btns=container.querySelectorAll('.mc-choice-btn:not([disabled])');
+      if(btns[n-1]) mcPick(choices[n-1],btns[n-1],choices);
+      return;
+    }
+    // First-letter navigation: press a letter to jump to first choice starting with that letter
+    if(e.key.length===1 && /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey){
+      var letter=e.key.toLowerCase();
+      var btns=container.querySelectorAll('.mc-choice-btn:not([disabled])');
+      for(var bi=0;bi<btns.length;bi++){
+        var word=(btns[bi].getAttribute('data-word')||'').toLowerCase();
+        if(word.charAt(0)===letter){
+          e.preventDefault();
+          btns[bi].focus();
+          return;
+        }
+      }
+    }
+  };
+  document.addEventListener('keydown',container._mcKeyHandler);
+
+  // Use requestAnimationFrame to focus only after the browser has painted the new buttons,
+  // preventing JAWS from losing focus and reading stale content at the top of the page.
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      var first=container.querySelector('.mc-choice-btn');
+      if(first){
+        first.scrollIntoView({block:'nearest',behavior:'instant'});
+        first.focus();
+      }
+    });
+  });
+}
+
+function mcPick(word, btn, choices){
+  var correct=cWords[mcIndex];
+  // Remove old key handler
+  var container=document.getElementById('mc-choices');
+  if(container._mcKeyHandler){
+    document.removeEventListener('keydown',container._mcKeyHandler);
+    container._mcKeyHandler=null;
+  }
+  if(word.toLowerCase()===correct.toLowerCase()){
+    chime();
+    // Clear any stale live-region text immediately so JAWS doesn't re-read "Incorrect. Try again."
+    var lr=document.getElementById('live-region');
+    if(lr) lr.textContent='';
+    // Don't change aria-label — button is about to be replaced by next question
+    mcCorrect[mcIndex]=true;
+    var allBtns=container.querySelectorAll('.mc-choice-btn');
+    allBtns.forEach(function(b){b.disabled=true;});
+    mcIndex++;
+    updateMCProgress();
+    renderMCVerse();
+    if(mcIndex>=cWords.length){
+      setTimeout(showComplete,400);
+    } else {
+      // Move to next question — JAWS reads the newly focused button label
+      renderMCQuestion();
+    }
+  } else {
+    buzz();
+    btn.className='mc-choice-btn wrong-pick';
+    btn.setAttribute('aria-label','Wrong: '+word);
+    announce('Incorrect. Try again.');
+    setTimeout(function(){
+      btn.className='mc-choice-btn';
+      btn.setAttribute('aria-label','Choice: '+word);
+      btn.disabled=false;
+      // Re-attach key handler
+      container._mcKeyHandler=function(e){
+        var n=parseInt(e.key);
+        if(n>=1&&n<=choices.length){
+          e.preventDefault();
+          var btns=container.querySelectorAll('.mc-choice-btn:not([disabled])');
+          if(btns[n-1]) mcPick(choices[n-1],btns[n-1],choices);
+          return;
+        }
+        // First-letter navigation
+        if(e.key.length===1 && /[a-zA-Z]/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey){
+          var letter=e.key.toLowerCase();
+          var btns=container.querySelectorAll('.mc-choice-btn:not([disabled])');
+          for(var bi=0;bi<btns.length;bi++){
+            var word=(btns[bi].getAttribute('data-word')||'').toLowerCase();
+            if(word.charAt(0)===letter){ e.preventDefault(); btns[bi].focus(); return; }
+          }
+        }
+      };
+      document.addEventListener('keydown',container._mcKeyHandler);
+      btn.focus();
+    },700);
+  }
+}
+
+function updateMCProgress(){
+  var done=mcCorrect.filter(Boolean).length;
+  var total=cWords.length;
+  var pct=total>0?Math.round(done/total*100):0;
+  var pb=document.getElementById('mc-progress-bar');
+  var pw=document.getElementById('mc-progress-wrap');
+  if(pb){
+    pb.style.width=pct+'%';
+    // Pop animation on fill (decorative)
+    pb.classList.remove('pb-pop');
+    void pb.offsetWidth;
+    pb.classList.add('pb-pop');
+  }
+  if(pw){pw.setAttribute('aria-valuenow',pct);pw.setAttribute('aria-label','Multiple choice progress: '+done+' of '+total+' words correct');}
+}
+
+// ─── HIGH CONTRAST TOGGLE ─────────────────────────────────────────────────────
+var HC_KEY='bible-hc';
+function toggleHighContrast(){
+  var on=document.body.classList.toggle('hc');
+  try{localStorage.setItem(HC_KEY,on?'1':'0');}catch(e){}
+  var btn=document.getElementById('hc-toggle-btn');
+  if(btn){
+    btn.textContent=on?'Normal Colors':'High Contrast';
+    btn.setAttribute('aria-label',on?'Switch to normal colors':'Enable high contrast mode');
+  }
+  announce(on?'High contrast mode on.':'High contrast mode off.');
+}
+(function(){
+  try{ if(localStorage.getItem(HC_KEY)==='1'){
+    document.body.classList.add('hc');
+    var btn=document.getElementById('hc-toggle-btn');
+    if(btn){btn.textContent='Normal Colors';btn.setAttribute('aria-label','Switch to normal colors');}
+  }}catch(e){}
+})();
+populateVerseSelect();
+renderMemorized(loadMemList());
+renderManageVerses();
+// Apply any previously-deleted built-in verses
+(function(){
+  try{
+    var deleted=JSON.parse(localStorage.getItem('bible-deleted-verses')||'[]');
+    deleted.forEach(function(ref){ delete VERSES[ref]; });
+    if(deleted.length){ populateVerseSelect(); renderManageVerses(); }
+  }catch(e){}
+})();
+initVoiceSelect();
+initRateSelect();
+// updateChunkReadBtn is called in buildChunkMode; set initial state here too for safety
+(function(){
+  var btn=document.getElementById('chunk-read-toggle-btn');
+  if(btn){ btn.textContent='Read verse so far: '+(chunkReadOn?'On':'Off'); btn.setAttribute('aria-pressed',chunkReadOn?'true':'false'); }
+})();
+document.getElementById('custom-ref-input').focus();
+</script>
+
+
+
+
+
+</div><!-- end page-body -->
+</body>
+</html>
