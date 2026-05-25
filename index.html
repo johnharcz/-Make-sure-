@@ -248,18 +248,6 @@ body.hc .cloze-blank input.locked{color:#004400!important;border-bottom-color:#0
 
 <div class="page-body">
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     WORD-BY-WORD MEMORIZATION TABLE
-     ═══════════════════════════════════════════════════════════════════════════ -->
-<div id="word-table-section" aria-labelledby="wt-heading">
-  <h2 id="wt-heading">Word-by-Word Verse Table</h2>
-  <p style="font-size:15px;color:#506070;margin-bottom:10px;">Left/Right arrow: move one word. Ctrl+Left: jump to first word. Ctrl+Right: jump to last word.</p>
-  <div id="word-table-wrap">
-    <p id="word-table-empty">No verse loaded yet — choose a verse below to begin.</p>
-    <table id="word-table" style="display:none;" role="presentation" aria-label="Verse word by word"></table>
-  </div>
-</div>
-
 
 <!-- VERSE SELECTION -->
 <div class="section">
@@ -317,6 +305,31 @@ body.hc .cloze-blank input.locked{color:#004400!important;border-bottom-color:#0
     <label><input type="radio" name="mode" value="scramble" />Word scramble</label>
     <label><input type="radio" name="mode" value="cloze" />Missing word fill-in</label>
     <label><input type="radio" name="mode" value="multiplechoice" />Multiple choice</label>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div class="section" id="how-to-play-section" aria-labelledby="htp-heading">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+    <h2 id="htp-heading" style="margin:0;">How to Play</h2>
+    <button id="htp-toggle-btn" class="primary" style="min-width:160px;"
+      aria-expanded="false" aria-controls="htp-collapsible">
+      Show instructions
+    </button>
+  </div>
+  <div id="htp-collapsible" style="display:none;margin-top:14px;">
+    <p style="font-size:16px;line-height:1.7;color:#3d4f5e;margin-bottom:12px;">
+      <strong>1. Pick a verse</strong> — choose from the verse list or add your own above. Then select a game mode and press Play or Hear Phrase to begin.
+    </p>
+    <p style="font-size:16px;line-height:1.7;color:#3d4f5e;margin-bottom:12px;">
+      <strong>2. Play through 5 games</strong> — each verse cycles through Phrase Builder, First Letter, Word Scramble, Missing Word, and Multiple Choice. Complete all 5 and the verse is added to your Memorized list.
+    </p>
+    <p style="font-size:16px;line-height:1.7;color:#3d4f5e;margin-bottom:12px;">
+      <strong>3. Study with the Word Table</strong> — at the bottom of the page, expand the Word-by-Word Verse Table to read through a verse one word at a time before playing.
+    </p>
+    <p style="font-size:16px;line-height:1.7;color:#3d4f5e;">
+      <strong>Game modes:</strong> <em>Phrase Builder</em> — hear the verse in growing phrases. <em>First Letter</em> — type each word from its first letter. <em>Word Scramble</em> — put the words in order. <em>Missing Word</em> — fill in the blanks. <em>Multiple Choice</em> — pick the correct word from four options.
+    </p>
   </div>
 </div>
 
@@ -442,9 +455,10 @@ body.hc .cloze-blank input.locked{color:#004400!important;border-bottom-color:#0
     </button>
   </div>
   <p style="font-size:16px;color:#506070;margin-top:8px;margin-bottom:14px;line-height:1.6;">Verses appear here automatically when you complete a game correctly. You can play them back one at a time using the practice buttons next to each verse, or press <strong>Play all verses</strong> to hear them read aloud in sequence. Press <strong>Remove</strong> to take a verse off the list when you no longer need it here.</p>
-  <div style="margin-bottom:14px;">
+  <div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
     <button id="play-all-btn">Play all verses</button>
     <button id="stop-all-btn">Stop playback</button>
+    <button id="clear-mem-btn" style="border-color:#9b111e;color:#9b111e;" aria-label="Clear all memorized verses">Clear all memorized</button>
   </div>
   <p id="play-all-status" class="status-txt" aria-live="polite" aria-atomic="true" style="display:none"></p>
   <div id="mem-collapsible" style="display:none;">
@@ -2132,6 +2146,7 @@ function showComplete(naturalReadText){
   if(allFiveDone){
     // All 5 complete — save to memorized and celebrate
     saveMemorized();
+    triumph();
     var msg='All five games complete! '+cRef+' has been added to your memorized verses. Choose a new verse to memorize.';
     fb.textContent=msg;
     fb.style.display='block';
@@ -2175,35 +2190,29 @@ function showComplete(naturalReadText){
 }
 
 function focusFirstGameElement(){
-  // Focus the first interactive element for the current game mode
+  // 300ms gives the next game time to fully render before we focus
   setTimeout(function(){
     if(cMode==='chunk'){
-      // Phrase Builder — focus Hear phrase button
       var btn=document.getElementById('hear-chunk-btn');
-      if(btn && btn.offsetParent!==null){ btn.focus(); return; }
+      if(btn && btn.offsetParent!==null){ btn.scrollIntoView({block:'nearest',behavior:'instant'}); btn.focus(); return; }
     }
     if(cMode==='firstletter'){
-      // First letter fill-in — focus first unlocked input
       var inputs=document.querySelectorAll('.fill-input:not(.locked)');
-      if(inputs.length){ inputs[0].focus(); return; }
+      if(inputs.length){ inputs[0].scrollIntoView({block:'nearest',behavior:'instant'}); inputs[0].focus(); return; }
     }
     if(cMode==='scramble'){
-      // Word scramble — focus word bank container
       var bank=document.getElementById('word-bank-container');
-      if(bank && bank.offsetParent!==null){ bank.focus(); return; }
+      if(bank && bank.offsetParent!==null){ bank.scrollIntoView({block:'nearest',behavior:'instant'}); bank.focus(); return; }
     }
     if(cMode==='cloze'){
-      // Missing word — focus first blank input
       var first=document.querySelector('#cloze-verse input');
-      if(first){ first.focus(); return; }
+      if(first){ first.scrollIntoView({block:'nearest',behavior:'instant'}); first.focus(); return; }
     }
     if(cMode==='multiplechoice'){
-      // Multiple choice — first choice button (renderMCQuestion already handles this,
-      // but call it again in case timing differs)
-      var btn=document.querySelector('#mc-choices .mc-choice-btn');
-      if(btn){ btn.focus(); return; }
+      var btn=document.querySelector('#mc-choices .mc-choice-btn:not([disabled])');
+      if(btn){ btn.scrollIntoView({block:'nearest',behavior:'instant'}); btn.focus(); return; }
     }
-  }, 150);
+  }, 300);
 }
 
 // Order of game modes for cycling on completion
@@ -2356,6 +2365,19 @@ function renderMemorized(list){
 }
 
 
+
+// ─── CLEAR ALL MEMORIZED ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  var cb = document.getElementById('clear-mem-btn');
+  if(cb){
+    cb.addEventListener('click', function(){
+      if(!confirm('Remove all verses from your memorized list? This cannot be undone.')) return;
+      try{ localStorage.setItem(MEM_KEY, JSON.stringify([])); }catch(e){}
+      renderMemorized([]);
+      announce('All memorized verses cleared.');
+    });
+  }
+});
 
 // ─── EXCEL WORKBOOK IMPORT FROM VERSE SHEET ──────────────────────────────────
 function cleanImportedVerseText(text){
@@ -2877,17 +2899,17 @@ function renderMCQuestion(){
   };
   document.addEventListener('keydown',container._mcKeyHandler);
 
-  // Use requestAnimationFrame to focus only after the browser has painted the new buttons,
-  // preventing JAWS from losing focus and reading stale content at the top of the page.
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      var first=container.querySelector('.mc-choice-btn');
-      if(first){
-        first.scrollIntoView({block:'nearest',behavior:'instant'});
-        first.focus();
-      }
-    });
-  });
+  // Focus first choice button reliably — setTimeout 80ms ensures DOM is painted
+  // and JAWS won't lose focus to top of page between question renders
+  setTimeout(function(){
+    var section=document.getElementById('mc-section');
+    if(!section || section.style.display==='none') return;
+    var first=container.querySelector('.mc-choice-btn:not([disabled])');
+    if(first){
+      first.scrollIntoView({block:'nearest',behavior:'instant'});
+      first.focus();
+    }
+  }, 80);
 }
 
 function mcPick(word, btn, choices){
@@ -3007,6 +3029,41 @@ if(document.readyState==='loading'){
   var btn=document.getElementById('chunk-read-toggle-btn');
   if(btn){ btn.textContent='Read verse so far: '+(chunkReadOn?'On':'Off'); btn.setAttribute('aria-pressed',chunkReadOn?'true':'false'); }
 })();
+// ─── WORD TABLE COLLAPSE TOGGLE ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  // How to Play toggle
+  var htpBtn = document.getElementById('htp-toggle-btn');
+  var htpCol = document.getElementById('htp-collapsible');
+  if(htpBtn && htpCol){
+    htpBtn.addEventListener('click', function(){
+      var open = htpCol.style.display !== 'none';
+      htpCol.style.display = open ? 'none' : 'block';
+      htpBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      htpBtn.textContent = open ? 'Show instructions' : 'Hide instructions';
+    });
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function(){
+  var wtBtn = document.getElementById('wt-toggle-btn');
+  var wtCol = document.getElementById('wt-collapsible');
+  if(wtBtn && wtCol){
+    wtBtn.addEventListener('click', function(){
+      var open = wtCol.style.display !== 'none';
+      wtCol.style.display = open ? 'none' : 'block';
+      wtBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+      wtBtn.textContent = open ? 'Show verse table' : 'Hide verse table';
+      if(!open){
+        // After opening, focus the ref cell if table is built
+        setTimeout(function(){
+          var ref = document.getElementById('wt-ref-cell');
+          if(ref){ ref.scrollIntoView({block:'nearest',behavior:'instant'}); ref.focus(); }
+        }, 80);
+      }
+    });
+  }
+});
+
 // ─── WORD-BY-WORD MEMORIZATION TABLE ─────────────────────────────────────────
 function splitTableWords(text){
   // Only split genuinely glued words. For 2-char suffixes require prefix >= 6 chars
@@ -3221,6 +3278,28 @@ setTimeout(function(){
 
 
 
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     WORD-BY-WORD MEMORIZATION TABLE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="word-table-section" aria-labelledby="wt-heading">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+    <h2 id="wt-heading" style="margin:0;">Word-by-Word Verse Table</h2>
+    <button id="wt-toggle-btn" class="primary" style="min-width:200px;"
+      aria-expanded="false" aria-controls="wt-collapsible">
+      Show verse table
+    </button>
+  </div>
+  <p style="font-size:15px;color:#506070;margin-top:8px;margin-bottom:0;">
+    Study a verse one word at a time before or after playing. Pick a verse above, then expand this table to read through it word by word. Use Up and Down arrow keys to move between words, Ctrl+Right to jump to the last word, Ctrl+Left to jump to the first.
+  </p>
+  <div id="wt-collapsible" style="display:none;margin-top:16px;">
+    <div id="word-table-wrap">
+      <p id="word-table-empty">No verse loaded yet — choose a verse above to begin.</p>
+      <table id="word-table" style="display:none;" role="presentation" aria-label="Verse word by word"></table>
+    </div>
+  </div>
+</div>
 
 <!-- VOICE & SPEECH SETTINGS -->
 <div class="section" id="voice-section" aria-labelledby="voice-heading">
