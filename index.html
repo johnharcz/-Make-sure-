@@ -3009,7 +3009,9 @@ if(document.readyState==='loading'){
 })();
 // ─── WORD-BY-WORD MEMORIZATION TABLE ─────────────────────────────────────────
 function splitTableWords(text){
-  var GLUED = /^(if|or|the|and|but|nor|yet|so|to|in|on|at|by|as|an|a|is|it|be|do|go|he|me|my|no|of|up|us|we|think|things|through|that|this|than|then|them|their|there|these|those|with|from|into|unto|upon|over|under|about|above|after|before|every|never|other|shall|since|until|where|which|while|whose|will|your|you|who|was|were|what|when|also|even|just|like|more|most|much|only|such|very|well|been|have|here|made|make|many|must|need|now|our|out|own|him|his|her|its|did|can|all|any|had|has|how|let|man|men|new|old|one|say|yes|i|o)$/i;
+  // Only split genuinely glued words. For 2-char suffixes require prefix >= 6 chars
+  // to avoid false matches like than->th+an or great->gre+at
+  var GLUED = /^(if|or|the|and|but|nor|yet|so|to|in|on|at|by|as|an|is|it|be|do|go|he|me|my|no|of|up|us|we|think|things|through|that|this|than|then|them|their|there|these|those|with|from|into|unto|upon|over|under|about|above|after|before|every|never|other|shall|since|until|where|which|while|whose|will|your|you|who|was|were|what|when|also|even|just|like|more|most|much|only|such|very|well|been|have|here|made|make|many|must|need|now|our|out|own|him|his|her|its|did|can|all|any|had|has|how|let|man|men|new|old|one|say|yes)$/i;
   var raw = text.split(/\s+/).filter(Boolean);
   var out = [];
   raw.forEach(function(w){
@@ -3017,10 +3019,11 @@ function splitTableWords(text){
     parts.forEach(function(p){
       if(!p) return;
       var found = false;
-      for(var len = 1; len <= Math.floor(p.length / 2); len++){
+      for(var len = 2; len <= Math.floor(p.length / 2); len++){
         var suffix = p.slice(p.length - len);
         var prefix = p.slice(0, p.length - len);
-        if(prefix.length >= 2 && GLUED.test(suffix)){
+        var minPrefix = len === 2 ? 6 : 2;
+        if(prefix.length >= minPrefix && GLUED.test(suffix)){
           out.push(prefix); out.push(suffix); found = true; break;
         }
       }
