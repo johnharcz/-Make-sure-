@@ -120,9 +120,9 @@ hr{border:none;border-top:1px solid #d4c9b0;margin:20px 0;}
 #word-table{border-collapse:collapse;white-space:nowrap;}
 #word-table td{border:2px solid #8a9ab0;padding:0;background:#fff;vertical-align:middle;}
 #word-table td:first-child{background:var(--navy);color:var(--gold-light);font-family:'Playfair Display',serif;font-weight:700;font-size:17px;padding:8px 14px;min-width:80px;text-align:center;border-color:var(--navy);}
-#word-table td[role=gridcell]:focus,#word-table td[role=rowheader]:focus{outline:4px solid #ffbf47;outline-offset:-2px;background:var(--primary-soft);}
-#word-table td[role=rowheader]:focus{background:var(--navy-mid);}
-body.hc #word-table td[role=gridcell]:focus{outline:4px solid #ffff00!important;background:#e0e0ff!important;}
+#word-table td:focus{outline:4px solid #ffbf47;outline-offset:-2px;background:var(--primary-soft);}
+#word-table td.wt-ref:focus{background:var(--navy-mid);}
+body.hc #word-table td:focus{outline:4px solid #ffff00!important;background:#e0e0ff!important;}
 #wt-goto-btn{margin-left:12px;font-size:16px;padding:10px 16px;min-height:44px;}
 #word-table-empty{font-size:17px;color:#506070;font-style:italic;}
 body.hc #word-table-section{background:#fff!important;border:3px solid #ffff00!important;}
@@ -258,7 +258,7 @@ body.hc .cloze-blank input.locked{color:#004400!important;border-bottom-color:#0
   <p style="font-size:15px;color:#506070;margin-bottom:10px;">Left/Right arrow: move one word. Ctrl+Left: jump to first word. Ctrl+Right: jump to last word.</p>
   <div id="word-table-wrap">
     <p id="word-table-empty">No verse loaded yet — choose a verse below to begin.</p>
-    <table id="word-table" style="display:none;" role="grid" aria-label="Verse word by word"></table>
+    <table id="word-table" style="display:none;" role="presentation" aria-label="Verse word by word"></table>
   </div>
 </div>
 
@@ -3057,12 +3057,13 @@ function buildWordTable(ref, text){
 
   // Single row
   var row = document.createElement('tr');
-  row.setAttribute('role','row');
+  // no role on row — presentation table
 
   // ── Reference cell ───────────────────────────────────────────────────────
   var refTd = document.createElement('td');
-  refTd.setAttribute('role','rowheader');
+  // no role on ref cell
   refTd.setAttribute('tabindex','0');
+  refTd.className = 'wt-ref';
   refTd.setAttribute('aria-label','Verse reference: '+ref+'. Press Down arrow to go to first word.');
   refTd.textContent = ref;
   refTd.style.cssText = 'font-family:"Playfair Display",serif;font-weight:700;font-size:17px;'+
@@ -3086,7 +3087,7 @@ function buildWordTable(ref, text){
   // ── One td per word ───────────────────────────────────────────────────────
   words.forEach(function(word, wi){
     var td = document.createElement('td');
-    td.setAttribute('role','gridcell');
+    // no role on word cells
     td.setAttribute('tabindex','-1');
     // No aria-label on word cells — JAWS reads the cell text directly
     td.setAttribute('data-wi', String(wi));
