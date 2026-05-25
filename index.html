@@ -113,6 +113,21 @@ hr{border:none;border-top:1px solid #d4c9b0;margin:20px 0;}
   #chunk-sofar-panel{max-width:100%!important;width:100%;}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;}}
+/* ── Word-by-word memorization table ── */
+#word-table-section{background:var(--cream);border:2px solid var(--gold);border-radius:var(--radius);padding:18px 20px;margin-bottom:22px;box-shadow:var(--shadow);}
+#word-table-section h2{color:var(--navy);margin-bottom:10px;}
+#word-table-wrap{overflow-x:auto;}
+#word-table{border-collapse:collapse;white-space:nowrap;}
+#word-table td{border:2px solid #8a9ab0;padding:0;background:#fff;vertical-align:middle;}
+#word-table td:first-child{background:var(--navy);color:var(--gold-light);font-family:'Playfair Display',serif;font-weight:700;font-size:17px;padding:8px 14px;min-width:80px;text-align:center;border-color:var(--navy);}
+#word-table td[role=gridcell]:focus,#word-table td[role=rowheader]:focus{outline:4px solid #ffbf47;outline-offset:-2px;background:var(--primary-soft);}
+#word-table td[role=rowheader]:focus{background:var(--navy-mid);}
+body.hc #word-table td[role=gridcell]:focus{outline:4px solid #ffff00!important;background:#e0e0ff!important;}
+#wt-goto-btn{margin-left:12px;font-size:16px;padding:10px 16px;min-height:44px;}
+#word-table-empty{font-size:17px;color:#506070;font-style:italic;}
+body.hc #word-table-section{background:#fff!important;border:3px solid #ffff00!important;}
+body.hc #word-table td:first-child{background:#000!important;color:#ffff00!important;border-color:#ffff00!important;}
+body.hc .wt-cell:focus{outline:4px solid #ffff00!important;background:#e0e0ff!important;}
 /* Cloze mode */
 .cloze-verse{font-family:'Playfair Display',serif;font-size:22px;line-height:1.9;color:#102045;margin-bottom:18px;}
 .cloze-blank{display:inline-block;border-bottom:3px solid var(--navy-light);min-width:90px;margin:0 4px;vertical-align:bottom;}
@@ -236,757 +251,16 @@ body.hc .cloze-blank input.locked{color:#004400!important;border-bottom-color:#0
 <div class="page-body">
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     MEDITATION MODE SECTION
+     WORD-BY-WORD MEMORIZATION TABLE
      ═══════════════════════════════════════════════════════════════════════════ -->
-<div class="section" id="meditation-section" aria-labelledby="med-heading">
-  <h2 id="med-heading">Meditation Mode</h2>
-
-  <!-- Reflection time ticker -->
-  <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <label style="font-weight:700;color:#1b2c44;font-size:18px;">Reflection pause:</label>
-    <div id="med-timer-spinner"
-         role="spinbutton"
-         aria-label="Reflection time"
-         aria-valuemin="0"
-         aria-valuemax="3660"
-         aria-valuenow="60"
-         aria-valuetext="1 minute"
-         tabindex="0"
-         style="font-size:24px;font-weight:700;color:#102045;background:#fff;border:3px solid #8a9ab0;border-radius:12px;padding:10px 20px;min-width:130px;text-align:center;cursor:default;user-select:none;">
-      1 min
-    </div>
+<div id="word-table-section" aria-labelledby="wt-heading">
+  <h2 id="wt-heading">Word-by-Word Verse Table</h2>
+  <p style="font-size:15px;color:#506070;margin-bottom:10px;">Left/Right arrow: move one word. Ctrl+Left: jump to first word. Ctrl+Right: jump to last word.</p>
+  <div id="word-table-wrap">
+    <p id="word-table-empty">No verse loaded yet — choose a verse below to begin.</p>
+    <table id="word-table" style="display:none;" role="grid" aria-label="Verse word by word"></table>
   </div>
-
-  <!-- Current verse display -->
-  <div id="med-verse-display" role="region" aria-label="Current verse" style="background:var(--cream-dark);border:2px solid #c8b87a;border-radius:14px;padding:18px;margin-bottom:12px;min-height:80px;">
-    <p id="med-verse-ref" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#102045;margin-bottom:8px;">—</p>
-    <p id="med-verse-text" style="font-size:18px;color:#2a2a3e;line-height:1.7;font-style:italic;"></p>
-  </div>
-  <p id="med-status-combined" aria-live="polite" aria-atomic="true" style="font-size:17px;font-weight:700;color:#20354f;margin-bottom:6px;">Ready</p>
-  <p id="med-countdown-lbl" aria-hidden="true" style="font-size:17px;font-weight:700;color:#1d7f43;margin-bottom:12px;min-height:26px;"></p>
-
-  <!-- Playback controls -->
-  <div role="group" aria-label="Meditation playback controls" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-    <button id="med-play-btn"            class="primary" style="font-size:19px;padding:14px 28px;"  aria-label="Play meditation">&#9654; Play</button>
-    <button id="med-pause-btn"           style="font-size:19px;padding:14px 28px;display:none;"     aria-label="Pause">&#9646;&#9646; Pause</button>
-    <button id="med-skip-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Skip to next verse">Skip &#8250;</button>
-    <button id="med-prev-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Previous verse">&#8249; Previous</button>
-    <button id="med-stop-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Stop">&#9632; Stop</button>
-    <button id="med-restart-session-btn" style="font-size:18px;padding:12px 20px;"                  aria-label="Restart from verse 1">&#8634; Restart</button>
-  </div>
-
-  <!-- Setup panel — collapsed by default -->
-  <details id="med-setup-details" style="margin-top:8px;">
-    <summary style="font-size:17px;font-weight:700;color:#1b2c44;cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:8px;">
-      <span>&#9881;</span> Setup &amp; Generate Audio
-    </summary>
-    <div id="med-setup-group" style="margin-top:14px;">
-      <div id="med-key-section" style="margin-bottom:20px;">
-        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">OpenAI API key</h3>
-        <label for="med-api-key" style="font-weight:700;display:block;margin-bottom:6px;color:#1b2c44;">Paste your key (starts with sk-):</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <input type="password" id="med-api-key" placeholder="sk-..." style="width:340px;font-size:17px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;background:#fff;color:#102045;" autocomplete="off" spellcheck="false" />
-          <button id="med-save-key-btn" class="primary">Save Key</button>
-          <button id="med-clear-key-btn">Clear Key</button>
-        </div>
-        <p id="med-key-status" style="font-size:15px;margin-top:8px;color:#1d7f43;font-weight:700;" aria-live="polite"></p>
-      </div>
-      <hr aria-hidden="true" style="margin:12px 0;" />
-      <div style="margin-bottom:20px;">
-        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">Voice</h3>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <label for="med-voice-select" style="font-weight:700;color:#1b2c44;">Voice:</label>
-          <select id="med-voice-select" style="font-size:17px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;min-width:200px;">
-            <option value="nova">Nova — warm female (recommended)</option>
-            <option value="shimmer">Shimmer — calm female</option>
-            <option value="alloy">Alloy — neutral</option>
-            <option value="echo">Echo — male</option>
-            <option value="fable">Fable — warm British male</option>
-            <option value="onyx">Onyx — deep male</option>
-          </select>
-          <button id="med-test-voice-btn">Test voice</button>
-        </div>
-      </div>
-      <hr aria-hidden="true" style="margin:12px 0;" />
-      <div style="margin-bottom:8px;">
-        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">Generate audio (one-time)</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="med-generate-btn" class="primary" style="font-size:18px;padding:14px 24px;">Generate all verse audio</button>
-          <button id="med-generate-new-btn" style="font-size:18px;padding:14px 24px;display:none;">Generate new verses only</button>
-        </div>
-        <div id="med-gen-progress" style="margin-top:12px;display:none;">
-          <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="med-gen-progress-wrap" aria-label="Audio generation progress" style="height:18px;background:#d4c9b0;border-radius:9px;overflow:hidden;margin-bottom:8px;">
-            <div id="med-gen-progress-bar" style="height:100%;background:var(--navy);width:0%;transition:width 0.3s;border-radius:9px;"></div>
-          </div>
-          <p id="med-gen-status" aria-live="polite" style="font-size:16px;color:#1b2c44;font-weight:700;"></p>
-        </div>
-        <p id="med-cache-status" style="font-size:15px;color:#506070;margin-top:10px;" aria-live="polite"></p>
-      </div>
-    </div>
-  </details>
-
 </div>
-
-<script>
-// ═══════════════════════════════════════════════════════════════════════════════
-// MEDITATION MODE JAVASCRIPT
-// ═══════════════════════════════════════════════════════════════════════════════
-
-var MED_KEY_STORE   = 'bible-med-openai-key';
-var MED_POS_STORE   = 'bible-med-position';
-var MED_TIMER_STORE = 'bible-med-timer';
-var MED_VOICE_STORE = 'bible-med-voice';
-var MED_AUDIO_DB    = 'bible-med-audio-v1';
-var MED_AUDIO_STORE = 'audio';
-
-// Ticker steps: 0, 10s, 20s, 30s, 40s, 50s, then 1-60 min (values in seconds)
-var MED_TICKER_STEPS = (function(){
-  var s=[0,10,20,30,40,50];
-  for(var m=1;m<=60;m++) s.push(m*60);
-  return s;
-})();
-var medTickerIdx = 6; // index 6 = 60s = 1 minute default
-
-function medTickerSeconds(){ return MED_TICKER_STEPS[medTickerIdx]; }
-function medTickerLabel(sec){
-  if(sec===0) return '0 — back to back';
-  if(sec<60) return sec+' sec';
-  var m=sec/60; return m===1?'1 min':m+' min';
-}
-
-// ── State ──────────────────────────────────────────────────────────────────────────────
-var medPlaying        = false;
-var medPaused         = false;
-var medCurrentIdx     = 0;
-var medCountdownTimer = null;
-var medCurrentAudio   = null;   // currently playing <audio> element (natural voice)
-var medUtterance      = null;   // current SpeechSynthesisUtterance (web voice fallback)
-var medTimerMinutes   = 1;      // legacy compat
-
-// ── AudioContext keep-alive — activates iOS AVAudioSession ───────────────────
-// iOS only routes media button / AirPod events to the browser when an
-// AudioContext is running. We create one synchronously inside the Play button's
-// click handler (the only reliable way to unlock audio on iOS), then keep a
-// near-silent oscillator running whenever meditation is active.
-var medAudioCtx       = null;
-var medSilentOsc      = null;
-var medSilentGain     = null;
-
-// Called SYNCHRONOUSLY inside the Play button click — must not be deferred.
-function medUnlockAudioContext(){
-  try{
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if(!AC) return;
-    if(!medAudioCtx){
-      medAudioCtx = new AC();
-    }
-    if(medAudioCtx.state === 'suspended'){
-      medAudioCtx.resume();   // synchronous call — iOS requires this in gesture stack
-    }
-  }catch(e){}
-}
-
-function medStartSilentAudio(){
-  try{
-    if(!medAudioCtx) return;
-    if(medAudioCtx.state === 'suspended') medAudioCtx.resume();
-    if(medSilentOsc) return;  // already running
-    medSilentGain = medAudioCtx.createGain();
-    medSilentGain.gain.setValueAtTime(0.001, medAudioCtx.currentTime); // inaudible
-    medSilentGain.connect(medAudioCtx.destination);
-    medSilentOsc = medAudioCtx.createOscillator();
-    medSilentOsc.frequency.setValueAtTime(1, medAudioCtx.currentTime); // 1 Hz — inaudible
-    medSilentOsc.connect(medSilentGain);
-    medSilentOsc.start();
-  }catch(e){}
-}
-
-function medStopSilentAudio(){
-  try{
-    if(medSilentOsc){ medSilentOsc.stop(); medSilentOsc.disconnect(); medSilentOsc=null; }
-    if(medSilentGain){ medSilentGain.disconnect(); medSilentGain=null; }
-    if(medAudioCtx && medAudioCtx.state === 'running') medAudioCtx.suspend();
-  }catch(e){}
-}
-
-// ── Chime (Web Audio — no file needed) ────────────────────────────────────────────
-function playChime(frequency, duration, volume){
-  try{
-    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
-    var ctx = new AC();
-    var osc  = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(frequency||528, ctx.currentTime);
-    gain.gain.setValueAtTime(volume||0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (duration||1.8));
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + (duration||1.8));
-    osc.onended = function(){ try{ ctx.close(); }catch(e){} };
-  }catch(e){}
-}
-// Warning chime at 10 sec: soft gentle bell
-function playWarningChime(){
-  try{
-    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
-    var ctx = new AC();
-    var osc=ctx.createOscillator();
-    var gain=ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type='sine';
-    osc.frequency.setValueAtTime(528, ctx.currentTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime+0.08);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+2.5);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime+2.5);
-    osc.onended = function(){ try{ ctx.close(); }catch(e){} };
-  }catch(e){}
-}
-
-// ── Ticker (replaces spinner) ──────────────────────────────────────────────────────────────
-function medSetTicker(idx){
-  idx = Math.max(0, Math.min(MED_TICKER_STEPS.length-1, idx));
-  medTickerIdx = idx;
-  var sec = medTickerSeconds();
-  medTimerMinutes = sec/60; // keep legacy var in sync
-  var el = document.getElementById('med-timer-spinner');
-  if(el){
-    var lbl = medTickerLabel(sec);
-    el.textContent = lbl;
-    el.setAttribute('aria-valuenow', sec);
-    el.setAttribute('aria-valuetext', lbl);
-  }
-  try{ localStorage.setItem(MED_TIMER_STORE, String(sec)); }catch(e){}
-}
-function initSpinner(){
-  // Restore saved value (saved as seconds now)
-  try{
-    var saved=localStorage.getItem(MED_TIMER_STORE);
-    if(saved!==null){
-      var sec=parseInt(saved,10)||0;
-      var best=0;
-      MED_TICKER_STEPS.forEach(function(v,i){ if(v<=sec) best=i; });
-      medSetTicker(best);
-    } else { medSetTicker(medTickerIdx); }
-  }catch(e){ medSetTicker(medTickerIdx); }
-
-  var el = document.getElementById('med-timer-spinner');
-  if(!el) return;
-
-  // Keyboard: left/right arrows step through ticker (JAWS spinbutton)
-  el.addEventListener('keydown', function(e){
-    if(e.key==='ArrowRight'||e.key==='ArrowUp'){ e.preventDefault(); medSetTicker(medTickerIdx+1); }
-    else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){ e.preventDefault(); medSetTicker(medTickerIdx-1); }
-    else if(e.key==='Home'){ e.preventDefault(); medSetTicker(0); }
-    else if(e.key==='End'){ e.preventDefault(); medSetTicker(MED_TICKER_STEPS.length-1); }
-  });
-  // Touch flick
-  var touchStartY=0;
-  el.addEventListener('touchstart',function(e){ touchStartY=e.touches[0].clientY; },{passive:true});
-  el.addEventListener('touchend',function(e){
-    var dy=touchStartY-e.changedTouches[0].clientY;
-    if(Math.abs(dy)>10){ medSetTicker(medTickerIdx+(dy>0?1:-1)); }
-  });
-  // Mouse wheel
-  el.addEventListener('wheel',function(e){
-    e.preventDefault();
-    medSetTicker(medTickerIdx+(e.deltaY<0?1:-1));
-  },{passive:false});
-
-}
-
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function saveMedPosition(idx){ try{ localStorage.setItem(MED_POS_STORE,String(idx)); }catch(e){} }
-function loadMedPosition(){ try{ var v=localStorage.getItem(MED_POS_STORE); return v!==null?parseInt(v,10):0; }catch(e){ return 0; } }
-
-function getMedApiKey(){ try{ return localStorage.getItem(MED_KEY_STORE)||''; }catch(e){ return ''; } }
-function saveMedApiKey(k){ try{ localStorage.setItem(MED_KEY_STORE,k); }catch(e){} }
-function clearMedApiKey(){ try{ localStorage.removeItem(MED_KEY_STORE); }catch(e){} }
-function getMedVoice(){ var s=document.getElementById('med-voice-select'); return s?s.value:'nova'; }
-function saveMedVoicePref(){ try{ localStorage.setItem(MED_VOICE_STORE,getMedVoice()); }catch(e){} }
-function loadMedVoicePref(){ try{ var v=localStorage.getItem(MED_VOICE_STORE); if(v){ var s=document.getElementById('med-voice-select'); if(s) s.value=v; } }catch(e){} }
-
-// ── IndexedDB audio cache ──────────────────────────────────────────────────────
-function openAudioDB(){
-  return new Promise(function(res,rej){
-    var req=indexedDB.open(MED_AUDIO_DB,1);
-    req.onupgradeneeded=function(e){ e.target.result.createObjectStore(MED_AUDIO_STORE); };
-    req.onsuccess=function(e){ res(e.target.result); };
-    req.onerror=function(){ rej(new Error('IndexedDB open failed')); };
-  });
-}
-function audioDB_get(db,key){
-  return new Promise(function(res,rej){
-    var tx=db.transaction(MED_AUDIO_STORE,'readonly');
-    var req=tx.objectStore(MED_AUDIO_STORE).get(key);
-    req.onsuccess=function(){ res(req.result||null); };
-    req.onerror=function(){ rej(); };
-  });
-}
-function audioDB_put(db,key,blob){
-  return new Promise(function(res,rej){
-    var tx=db.transaction(MED_AUDIO_STORE,'readwrite');
-    tx.objectStore(MED_AUDIO_STORE).put(blob,key);
-    tx.oncomplete=function(){ res(); };
-    tx.onerror=function(){ rej(); };
-  });
-}
-function audioDB_keys(db){
-  return new Promise(function(res,rej){
-    var tx=db.transaction(MED_AUDIO_STORE,'readonly');
-    var req=tx.objectStore(MED_AUDIO_STORE).getAllKeys();
-    req.onsuccess=function(){ res(req.result||[]); };
-    req.onerror=function(){ rej(); };
-  });
-}
-
-// ── OpenAI TTS ────────────────────────────────────────────────────────────────
-function fetchVerseAudio(apiKey,voice,text){
-  return fetch('https://api.openai.com/v1/audio/speech',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
-    body:JSON.stringify({model:'tts-1',voice:voice,input:text,speed:0.88})
-  }).then(function(resp){
-    if(!resp.ok) return resp.json().then(function(e){ throw new Error((e.error&&e.error.message)||('HTTP '+resp.status)); });
-    return resp.blob();
-  });
-}
-
-// ── Cache status ──────────────────────────────────────────────────────────────
-function medUpdateCacheStatus(){
-  openAudioDB().then(function(db){
-    audioDB_keys(db).then(function(keys){
-      var verses=getMedVerseList(), cached=keys.length, total=verses.length;
-      var el=document.getElementById('med-cache-status'); if(!el) return;
-      if(cached===0) el.textContent='No audio cached. Press Generate all verse audio first.';
-      else if(cached<total){
-        el.textContent=cached+' of '+total+' verses cached.';
-        var nb=document.getElementById('med-generate-new-btn'); if(nb) nb.style.display='';
-      } else {
-        el.textContent='All '+total+' verses cached and ready.';
-        var nb=document.getElementById('med-generate-new-btn'); if(nb) nb.style.display='';
-      }
-    });
-  }).catch(function(){});
-}
-
-// ── Generate audio ────────────────────────────────────────────────────────────
-async function medGenerateAudio(newOnly){
-  var apiKey=getMedApiKey();
-  if(!apiKey||!apiKey.startsWith('sk-')){
-    announce('Please save a valid OpenAI API key first.');
-    var st=document.getElementById('med-key-status');
-    if(st){ st.textContent='Please enter and save your API key first.'; st.style.color='#9b111e'; }
-    var ki=document.getElementById('med-api-key'); if(ki) ki.focus();
-    return;
-  }
-  var verses=getMedVerseList(), voice=getMedVoice();
-  var genBtn=document.getElementById('med-generate-btn'), newBtn=document.getElementById('med-generate-new-btn');
-  var progWrap=document.getElementById('med-gen-progress'), progBar=document.getElementById('med-gen-progress-bar');
-  var progEl=document.getElementById('med-gen-progress-wrap'), statusEl=document.getElementById('med-gen-status');
-  if(genBtn) genBtn.disabled=true; if(newBtn) newBtn.disabled=true;
-  if(progWrap) progWrap.style.display=''; if(statusEl) statusEl.textContent='Opening audio cache…';
-  var db; try{ db=await openAudioDB(); }
-  catch(e){ if(statusEl) statusEl.textContent='Could not open cache: '+e.message; if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false; return; }
-  var existingKeys=[]; if(newOnly){ try{ existingKeys=await audioDB_keys(db); }catch(e){} }
-  var toGen=newOnly?verses.filter(function(v){ return existingKeys.indexOf(v.ref)<0; }):verses;
-  if(!toGen.length){ if(statusEl) statusEl.textContent='All audio already cached.'; if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false; medUpdateCacheStatus(); return; }
-  var done=0, errors=[];
-  for(var i=0;i<toGen.length;i++){
-    var v=toGen[i];
-    if(statusEl) statusEl.textContent='Generating '+(i+1)+' of '+toGen.length+': '+v.ref+'…';
-    if(i===0||i%10===0) announce('Generating verse '+(i+1)+' of '+toGen.length);
-    try{
-      var blob=await fetchVerseAudio(apiKey,voice,spokenRef(v.ref)+'. '+v.text);
-      await audioDB_put(db,v.ref,blob); done++;
-    }catch(err){ errors.push(v.ref+': '+err.message); }
-    var pct=Math.round(((i+1)/toGen.length)*100);
-    if(progBar) progBar.style.width=pct+'%'; if(progEl) progEl.setAttribute('aria-valuenow',pct);
-    if(i<toGen.length-1) await new Promise(function(r){ setTimeout(r,300); });
-  }
-  if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false;
-  if(errors.length){ if(statusEl){ statusEl.textContent=done+' done, '+errors.length+' failed: '+errors.join('; '); statusEl.style.color='#9b111e'; } }
-  else{ if(statusEl){ statusEl.textContent='Done! All '+done+' verses cached.'; statusEl.style.color='#1d7f43'; } announce('Done. '+done+' verses ready.'); }
-  medUpdateCacheStatus();
-}
-
-function getMedVerseList(){
-  return Object.keys(VERSES).map(function(ref){ return {ref:ref,text:VERSES[ref]}; });
-}
-function spokenRef(ref){
-  return ref.replace(/(\d+):(\d+)-(\d+)/g,'$1, verses $2 through $3').replace(/(\d+):(\d+)/g,'$1, verse $2');
-}
-
-// ── UI ────────────────────────────────────────────────────────────────────────
-function medSetStatus(msg){
-  var el=document.getElementById('med-status-combined'); if(el) el.textContent=msg;
-}
-function medSetCountdown(txt){
-  var el=document.getElementById('med-countdown-lbl'); if(el) el.textContent=txt;
-}
-function medShowVerse(ref,text){
-  document.getElementById('med-verse-ref').textContent  = ref||'—';
-  document.getElementById('med-verse-text').textContent = text||'';
-}
-
-// Show only the buttons relevant to current state
-// states: 'idle' | 'playing' | 'paused' | 'reflecting' | 'done'
-function medSetButtons(state){
-  var play    = document.getElementById('med-play-btn');
-  var pause   = document.getElementById('med-pause-btn');
-  var skip    = document.getElementById('med-skip-btn');
-  var prev    = document.getElementById('med-prev-btn');
-  var stop    = document.getElementById('med-stop-btn');
-  var restart = document.getElementById('med-restart-session-btn');
-  var show = function(el,vis){ if(el) el.style.display=vis?'':'none'; };
-
-  show(play,    state==='idle'||state==='paused'||state==='done');
-  show(pause,   state==='playing'||state==='reflecting');
-  show(skip,    state==='playing'||state==='paused'||state==='reflecting');
-  show(prev,    state==='playing'||state==='paused'||state==='reflecting');
-  show(stop,    state==='playing'||state==='paused'||state==='reflecting');
-  show(restart, true); // always visible
-}
-
-// ── Media Session ─────────────────────────────────────────────────────────────
-function medUpdateMediaSession(ref,text){
-  if(!('mediaSession' in navigator)) return;
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: ref||'Bible Meditation',
-    artist: 'Bible Verse Meditation',
-    album: text?text.substring(0,80):''
-  });
-}
-
-// ── Release a natural voice audio element safely ───────────────────────────
-function medReleaseAudio(audio){
-  if(!audio) return;
-  try{ audio.pause(); audio.onended=null; audio.onerror=null; }catch(e){}
-  if(audio._blobUrl){ try{ URL.revokeObjectURL(audio._blobUrl); }catch(e){} audio._blobUrl=null; }
-}
-
-// ── Play verse at index — natural voice first, web speech fallback ─────────
-// No pre-loading: fetch blob fresh each time from IndexedDB.
-// This eliminates the race condition that caused verse 3+ to fail.
-// The silent oscillator bridges the gap between verses so iOS keeps the
-// audio session alive through the reflection countdown.
-async function medPlayVerseAtIndex(idx){
-  var verses=getMedVerseList();
-  if(idx<0||idx>=verses.length) return;
-  var v=verses[idx];
-
-  // Stop whatever was playing
-  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  medUtterance=null;
-
-  medCurrentIdx=idx; saveMedPosition(idx);
-  medShowVerse(v.ref,v.text);
-  medSetStatus('Playing verse '+(idx+1)+' of '+verses.length+': '+v.ref);
-  medSetCountdown('');
-  medSetButtons('playing');
-  announce('Now playing: '+v.ref);
-  medUpdateMediaSession(v.ref,v.text);
-  if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
-
-  // ── Try natural voice (IndexedDB cache) ───────────────────────────────────
-  var blob = null;
-  try{
-    var db = await openAudioDB();
-    blob = await audioDB_get(db, v.ref);
-  }catch(e){ blob=null; }
-
-  if(blob){
-    // Natural voice path — real <audio> element, activates iOS AVAudioSession
-    medStopSilentAudio(); // real audio takes over, oscillator not needed while playing
-    var url = URL.createObjectURL(blob);
-    var audio = new Audio(url);
-    audio._blobUrl = url;
-    medCurrentAudio = audio;
-
-    audio.onended = function(){
-      medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-      if(medPlaying&&!medPaused){
-        medStartSilentAudio(); // bridge the gap during countdown
-        medAdvanceAfterDelay();
-      }
-    };
-    audio.onerror = function(){
-      medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-      if(medPlaying&&!medPaused) medPlayVerseAtIndexWebSpeech(idx); // fallback
-    };
-
-    var p=audio.play();
-    if(p&&typeof p.catch==='function'){
-      p.catch(function(){
-        // iOS blocked play — try resuming AudioContext then retry
-        if(medAudioCtx&&medAudioCtx.state==='suspended'){
-          medAudioCtx.resume().then(function(){ audio.play().catch(function(){
-            medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-            medPlayVerseAtIndexWebSpeech(idx);
-          }); });
-        } else {
-          medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-          medPlayVerseAtIndexWebSpeech(idx);
-        }
-      });
-    }
-    return;
-  }
-
-  // ── Web Speech fallback (no cache) ────────────────────────────────────────
-  medPlayVerseAtIndexWebSpeech(idx);
-}
-
-function medPlayVerseAtIndexWebSpeech(idx){
-  var verses=getMedVerseList();
-  if(idx<0||idx>=verses.length) return;
-  var v=verses[idx];
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  var u=new SpeechSynthesisUtterance(spokenRef(v.ref)+'. '+v.text);
-  var voice=getBestVoice(); if(voice) u.voice=voice;
-  u.rate=getSpeechRate(); u.pitch=1; u.volume=1;
-  u.onend=function(){
-    medUtterance=null;
-    if(medPlaying&&!medPaused) medAdvanceAfterDelay();
-  };
-  u.onerror=function(){
-    medUtterance=null;
-    if(medPlaying&&!medPaused) medAdvanceAfterDelay();
-  };
-  medUtterance=u;
-  try{ window.speechSynthesis.speak(u); }catch(e){ if(medPlaying&&!medPaused) medAdvanceAfterDelay(); }
-}
-
-// ── Countdown ─────────────────────────────────────────────────────────────────
-// Stores end timestamp; corrects drift on every tick after screen wakes
-function medStartCountdown(totalSec, onComplete){
-  if(totalSec<=0){ onComplete(); return; }
-  var endTS=Date.now()+(totalSec*1000);
-  var chimed10=false;
-
-  medSetButtons('reflecting');
-  medSetStatus('Reflecting…');
-  if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
-
-  function tick(){
-    if(!medPlaying||medPaused){ return; }
-    var remaining=Math.ceil((endTS-Date.now())/1000);
-    if(remaining<=0){ medSetCountdown(''); onComplete(); return; }
-
-    var m=Math.floor(remaining/60), s=remaining%60;
-    var display=m>0?m+' min '+(s<10?'0':'')+s+' sec':s+' sec';
-    medSetCountdown('Reflecting: '+display+' remaining');
-
-    // Chime at 10 seconds (only when reflection time is 1 minute or more)
-    if(remaining<=10&&!chimed10&&totalSec>=60){ chimed10=true; playWarningChime(); }
-
-    medCountdownTimer=setTimeout(tick,500);
-  }
-  tick();
-}
-
-
-function medAdvanceAfterDelay(){
-  var totalSec=medTickerSeconds();
-  medStartCountdown(totalSec, function(){
-    medNextVerse();
-  });
-}
-
-function medNextVerse(){
-  var verses=getMedVerseList();
-  var next=medCurrentIdx+1;
-  if(next>=verses.length){
-    medSetStatus('All verses complete. Well done!');
-    medSetCountdown('');
-    announce('All verses read. Session complete.');
-    if('mediaSession' in navigator) navigator.mediaSession.playbackState='none';
-    medSetButtons('done');
-    medPlaying=false; medPaused=false;
-    medCurrentIdx=0; saveMedPosition(0);
-    return;
-  }
-  medPlayVerseAtIndex(next);
-}
-
-// ── Focus helper — keeps JAWS on the right button ────────────────────────────
-function medFocusPlayPause(){
-  setTimeout(function(){
-    var btn=document.getElementById(medPlaying?'med-pause-btn':'med-play-btn');
-    if(btn && btn.style.display!=='none') btn.focus();
-  },50);
-}
-function medPlay(){
-  if(medPaused){
-    medPaused=false; medPlaying=true;
-    medStartSilentAudio();
-    medSetButtons('playing');
-    if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
-    announce('Resumed.');
-    // Was paused during countdown — restart countdown from current verse
-    medAdvanceAfterDelay();
-    medFocusPlayPause();
-    return;
-  }
-  medPlaying=true; medPaused=false;
-  medStartSilentAudio();
-  var saved=loadMedPosition();
-  var verses=getMedVerseList();
-  if(saved>=verses.length) saved=0;
-  medPlayVerseAtIndex(saved);
-  medFocusPlayPause();
-}
-
-function medPause(){
-  if(!medPlaying&&!medPaused) return;
-  medPaused=true; medPlaying=false;
-  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  medUtterance=null;
-  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-  medStopSilentAudio();
-  medSetButtons('paused');
-  if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
-  medSetStatus('Paused — press Play or Space to resume');
-  announce('Paused.');
-  medFocusPlayPause();
-}
-
-function medStop(){
-  medPlaying=false; medPaused=false;
-  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  medUtterance=null;
-  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-  medStopSilentAudio();
-  medSetButtons('idle');
-  medSetCountdown('');
-  if('mediaSession' in navigator) navigator.mediaSession.playbackState='none';
-  medSetStatus('Stopped');
-}
-
-function medSkip(){
-  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  medUtterance=null;
-  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-  medSetCountdown('');
-  var verses=getMedVerseList();
-  var next=Math.min(medCurrentIdx+1,verses.length-1);
-  if(medPlaying||medPaused){
-    medPaused=false; medPlaying=true;
-    medPlayVerseAtIndex(next);
-    medFocusPlayPause();
-  } else {
-    medCurrentIdx=next; saveMedPosition(next);
-    medShowVerse(verses[next].ref,verses[next].text);
-    medSetStatus('Verse '+(next+1)+' of '+verses.length+': '+verses[next].ref+' — press Play');
-    announce('Skipped to '+verses[next].ref);
-  }
-}
-
-function medPrev(){
-  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
-  if('speechSynthesis' in window) window.speechSynthesis.cancel();
-  medUtterance=null;
-  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
-  medSetCountdown('');
-  var verses=getMedVerseList();
-  var prev=Math.max(medCurrentIdx-1,0);
-  if(medPlaying||medPaused){
-    medPaused=false; medPlaying=true;
-    medPlayVerseAtIndex(prev);
-    medFocusPlayPause();
-  } else {
-    medCurrentIdx=prev; saveMedPosition(prev);
-    medShowVerse(verses[prev].ref,verses[prev].text);
-    medSetStatus('Verse '+(prev+1)+' of '+verses.length+': '+verses[prev].ref+' — press Play');
-    announce('Moved to '+verses[prev].ref);
-  }
-}
-
-function medRestartSession(){
-  medStop(); medCurrentIdx=0; saveMedPosition(0);
-  var verses=getMedVerseList();
-  if(verses.length){ medShowVerse(verses[0].ref,verses[0].text); }
-  medSetStatus('Ready — press Play to start from '+(verses[0]?verses[0].ref:'verse 1'));
-  announce('Restarted. Press Play to begin from '+(verses[0]?verses[0].ref:'verse 1')+'.');
-}
-
-// ── Setup panel button wiring ─────────────────────────────────────────────────
-document.getElementById('med-save-key-btn').addEventListener('click',function(){
-  var val=document.getElementById('med-api-key').value.trim();
-  var st=document.getElementById('med-key-status');
-  if(!val){ st.textContent='Please enter your API key.'; st.style.color='#9b111e'; announce('Please enter your API key.'); return; }
-  if(!val.startsWith('sk-')){ st.textContent='Key should start with sk-'; st.style.color='#9b111e'; announce('Invalid key format.'); return; }
-  saveMedApiKey(val); document.getElementById('med-api-key').value='';
-  st.textContent='API key saved in this browser.'; st.style.color='#1d7f43';
-  announce('API key saved.'); medUpdateCacheStatus();
-});
-document.getElementById('med-clear-key-btn').addEventListener('click',function(){
-  clearMedApiKey(); document.getElementById('med-api-key').value='';
-  var st=document.getElementById('med-key-status');
-  st.textContent='Key cleared.'; st.style.color='#506070'; announce('API key cleared.');
-});
-document.getElementById('med-test-voice-btn').addEventListener('click',async function(){
-  medUnlockAudioContext();
-  var apiKey=getMedApiKey();
-  if(!apiKey){ announce('Please save your API key first.'); return; }
-  var voice=getMedVoice(); saveMedVoicePref(); announce('Testing voice '+voice+'…');
-  try{
-    var blob=await fetchVerseAudio(apiKey,voice,'The LORD is my shepherd. I shall not be in want. Psalm 23, verse 1.');
-    var url=URL.createObjectURL(blob);
-    var a=new Audio(url); a.onended=function(){ URL.revokeObjectURL(url); }; a.play();
-  }catch(err){
-    announce('Voice test failed: '+err.message);
-    var st=document.getElementById('med-key-status');
-    st.textContent='Voice test failed: '+err.message; st.style.color='#9b111e';
-  }
-});
-document.getElementById('med-generate-btn').addEventListener('click',function(){ saveMedVoicePref(); medGenerateAudio(false); });
-document.getElementById('med-generate-new-btn').addEventListener('click',function(){ saveMedVoicePref(); medGenerateAudio(true); });
-document.getElementById('med-voice-select').addEventListener('change',saveMedVoicePref);
-document.getElementById('med-play-btn').addEventListener('click',function(){
-  medUnlockAudioContext();  // must be synchronous in gesture handler for iOS
-  medPlay();
-});
-document.getElementById('med-pause-btn').addEventListener('click',medPause);
-document.getElementById('med-skip-btn').addEventListener('click',medSkip);
-document.getElementById('med-prev-btn').addEventListener('click',medPrev);
-document.getElementById('med-stop-btn').addEventListener('click',function(){ medStop(); announce('Stopped.'); });
-document.getElementById('med-restart-session-btn').addEventListener('click',medRestartSession);
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-(function initMeditation(){
-  loadMedVoicePref();
-  initSpinner();
-  var existingKey=getMedApiKey();
-  var st=document.getElementById('med-key-status');
-  if(existingKey&&st){ st.textContent='API key is saved in this browser.'; st.style.color='#1d7f43'; }
-  var verses=getMedVerseList();
-  var saved=loadMedPosition();
-  if(saved>=verses.length) saved=0;
-  medCurrentIdx=saved;
-  if(verses.length){ medShowVerse(verses[saved].ref,verses[saved].text); }
-  medSetStatus('Verse '+(saved+1)+' of '+verses.length+' — press Play to begin from '+(verses[saved]?verses[saved].ref:'first verse'));
-  medSetButtons('idle');
-  medUpdateCacheStatus();
-  if('mediaSession' in navigator){
-    navigator.mediaSession.setActionHandler('play',          medPlay);
-    navigator.mediaSession.setActionHandler('pause',         medPause);
-    navigator.mediaSession.setActionHandler('stop',          medStop);
-    navigator.mediaSession.setActionHandler('nexttrack',     medSkip);
-    navigator.mediaSession.setActionHandler('previoustrack', medPrev);
-    // Some headphone firmware fires seekforward/seekbackward for 2×/3× clicks
-    try{ navigator.mediaSession.setActionHandler('seekforward',  medSkip); }catch(e){}
-    try{ navigator.mediaSession.setActionHandler('seekbackward', medPrev); }catch(e){}
-  }
-})();
-</script>
 
 
 <!-- VERSE SELECTION -->
@@ -1033,11 +307,7 @@ document.getElementById('med-restart-session-btn').addEventListener('click',medR
       </ul>
     </div>
     <button id="random-btn">Random verse</button>
-    <button id="check-excel-btn">Import Bible.xlsm</button>
-    <button id="reimport-btn" style="display:none">Re-import Bible.xlsm</button>
-    <input type="file" id="excel-file" accept=".xlsx,.xls,.xlsm,.csv" style="display:none" aria-label="Choose Bible.xlsm workbook" />
   </div>
-
   <p id="verse-status" class="status-txt" style="margin-top:12px;">Choose from the list or add your own verse above.</p>
   <p id="verse-error" class="error-txt" style="display:none"></p>
   <hr />
@@ -1161,25 +431,6 @@ document.getElementById('med-restart-session-btn').addEventListener('click',medR
     <button id="stop-loop-btn">Stop loop audio</button>
     <button id="restart-btn">Restart this verse</button>
     <button id="new-verse-btn">New verse</button>
-  </div>
-  <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <label for="voice-select" style="font-weight:700;margin-bottom:0;">Speech voice:</label>
-    <select id="voice-select" style="width:auto;min-width:220px;" aria-describedby="voice-select-help"></select>
-    <span id="voice-count-lbl" aria-live="polite" style="font-size:15px;color:#506070;"></span>
-    <button id="voice-test-btn" class="small">Test voice</button>
-    <button id="voice-reload-btn" class="small">Reload voices</button>
-    <p id="voice-select-help" class="sr-only">Choose which voice speaks the verses. Press Test voice to hear a preview. On iPhone or iPad, press Test voice first and then Reload voices to unlock the full voice list. If the list is empty or missing voices press Reload voices.</p>
-  </div>
-  <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <label for="rate-select" style="font-weight:700;margin-bottom:0;">Speech rate:</label>
-    <select id="rate-select" style="width:auto;min-width:160px;" aria-describedby="rate-select-help">
-      <option value="0.6">Very slow</option>
-      <option value="0.75">Slow</option>
-      <option value="0.92" selected>Normal</option>
-      <option value="1.1">Fast</option>
-      <option value="1.3">Very fast</option>
-    </select>
-    <p id="rate-select-help" class="sr-only">Choose how fast the voice reads verses.</p>
   </div>
 </div>
 
@@ -1939,12 +1190,22 @@ async function reimport(){
   }
 }
 
-document.getElementById('check-excel-btn').addEventListener('click', pickAndImport);
-document.getElementById('reimport-btn').addEventListener('click', reimport);
-document.getElementById('excel-file').addEventListener('change',function(){
-  if(this.files && this.files[0]) importExcelWorkbook(this.files[0]);
-});
-loadSavedHandle();
+// Import buttons are at bottom of page (after this script block), so attach listeners after DOM ready
+function attachImportListeners(){
+  var ceb=document.getElementById('check-excel-btn');
+  var rib=document.getElementById('reimport-btn');
+  var ef=document.getElementById('excel-file');
+  if(ceb) ceb.addEventListener('click', pickAndImport);
+  if(rib) rib.addEventListener('click', reimport);
+  if(ef)  ef.addEventListener('change',function(){
+    if(this.files && this.files[0]) importExcelWorkbook(this.files[0]);
+  });
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', function(){ attachImportListeners(); loadSavedHandle(); });
+} else {
+  attachImportListeners(); loadSavedHandle();
+}
 
 var CUSTOM_VERSES_KEY='bible-custom-verses-v1';
 function loadCustomVerses(){
@@ -2454,18 +1715,18 @@ function tryWord(word,bankIdx){
       if(scrambleReadOn){
         var verseSoFar=cWords.slice(0,nextSlot).join(' ');
         speakText(verseSoFar, function(){
-          if(c && scrambledWords.length){
+          if(c && scrambledWords.length && document.getElementById('scramble-section').style.display!=='none'){
             c.scrollIntoView({block:'nearest',behavior:'instant'});
             c.focus();
-            announce(scrambledWords[0]);
+            announce(scrambledWords[bankFocusIdx]||scrambledWords[0]);
           }
         });
       }else{
         setTimeout(function(){
-          if(c && scrambledWords.length){
+          if(c && scrambledWords.length && document.getElementById('scramble-section').style.display!=='none'){
             c.scrollIntoView({block:'nearest',behavior:'instant'});
             c.focus();
-            announce(scrambledWords[0]);
+            announce(scrambledWords[bankFocusIdx]||scrambledWords[0]);
           }
         },60);
       }
@@ -2477,10 +1738,10 @@ function tryWord(word,bankIdx){
     renderBank();
     setTimeout(function(){
       var c=document.getElementById('word-bank-container');
-      if(c){
+      if(c && document.getElementById('scramble-section').style.display!=='none'){
         c.scrollIntoView({block:'nearest',behavior:'instant'});
         c.focus();
-        announce(scrambledWords[bankIdx]);
+        announce(scrambledWords[bankIdx]||'');
       }
     },80);
   }
@@ -2873,27 +2134,26 @@ function showComplete(naturalReadText){
   if(allFiveDone){
     // All 5 complete — save to memorized and celebrate
     saveMemorized();
-    var msg='All five games complete! '+cRef+' has been added to your memorized verses.';
+    var msg='All five games complete! '+cRef+' has been added to your memorized verses. Choose a new verse to memorize.';
     fb.textContent=msg;
     fb.style.display='block';
+    // Switch game selector to Phrase Builder
+    var radios=Array.from(document.querySelectorAll('input[name="mode"]'));
+    var chunkRadio=radios.find(function(r){return r.value==='chunk';});
+    if(chunkRadio) chunkRadio.checked=true;
+    function focusPickVerseBtn(){
+      verseGamesCompleted=0;
+      var vb=document.getElementById('vlist-btn');
+      if(vb){ vb.scrollIntoView({block:'nearest',behavior:'instant'}); vb.focus(); }
+    }
     if(naturalReadText){
       speakText(naturalReadText, function(){
         announce(msg);
-        // Reset counter so verse can be cycled again if desired
-        verseGamesCompleted=0;
-        // Focus restart button so user can choose what to do next
-        setTimeout(function(){
-          var rb=document.getElementById('restart-btn');
-          if(rb) rb.focus();
-        },100);
+        setTimeout(focusPickVerseBtn,100);
       });
     } else {
       announce(msg);
-      verseGamesCompleted=0;
-      setTimeout(function(){
-        var rb=document.getElementById('restart-btn');
-        if(rb) rb.focus();
-      },100);
+      setTimeout(focusPickVerseBtn,100);
     }
   } else {
     // More games to go — auto-start the next one
@@ -3738,19 +2998,1001 @@ renderManageVerses();
     if(deleted.length){ populateVerseSelect(); renderManageVerses(); }
   }catch(e){}
 })();
-initVoiceSelect();
-initRateSelect();
+// Voice/rate selects are at bottom of page — defer init until DOM is fully loaded
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', function(){ initVoiceSelect(); initRateSelect(); });
+} else {
+  initVoiceSelect(); initRateSelect();
+}
 // updateChunkReadBtn is called in buildChunkMode; set initial state here too for safety
 (function(){
   var btn=document.getElementById('chunk-read-toggle-btn');
   if(btn){ btn.textContent='Read verse so far: '+(chunkReadOn?'On':'Off'); btn.setAttribute('aria-pressed',chunkReadOn?'true':'false'); }
 })();
-document.getElementById('custom-ref-input').focus();
+// ─── WORD-BY-WORD MEMORIZATION TABLE ─────────────────────────────────────────
+function splitTableWords(text){
+  // Known short words that get glued to adjacent words in stored verse text
+  var GLUED = /^(if|or|the|and|but|nor|yet|so|to|in|on|at|by|as|an|a|is|it|be|do|go|he|me|my|no|of|up|us|we|think|things|through|that|this|than|then|them|their|there|these|those|with|from|into|unto|upon|over|under|about|above|after|before|every|never|other|shall|since|until|where|which|while|whose|will|your|you|who|was|were|what|when|also|even|just|like|more|most|much|only|such|very|well|been|have|here|made|make|many|must|need|now|our|out|own|him|his|her|its|did|can|all|any|had|has|how|let|man|men|new|old|one|say|yes|i|o)$/i;
+  var raw = text.split(/\s+/).filter(Boolean);
+  var out = [];
+  raw.forEach(function(w){
+    // First split on camelCase (lowercase-to-uppercase boundary)
+    var parts = w.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ');
+    // Then check each part for a glued common word at the end
+    parts.forEach(function(p){
+      if(!p) return;
+      var found = false;
+      for(var len = 1; len <= Math.floor(p.length / 2); len++){
+        var suffix = p.slice(p.length - len);
+        var prefix = p.slice(0, p.length - len);
+        if(prefix.length >= 2 && GLUED.test(suffix)){
+          out.push(prefix);
+          out.push(suffix);
+          found = true;
+          break;
+        }
+      }
+      if(!found) out.push(p);
+    });
+  });
+  return out;
+}
+
+function buildWordTable(ref, text){
+  var wrap  = document.getElementById('word-table-wrap');
+  var table = document.getElementById('word-table');
+  var empty = document.getElementById('word-table-empty');
+  if(!wrap || !table || !empty) return;
+
+  if(!ref || !text){
+    table.style.display='none';
+    empty.style.display='';
+    return;
+  }
+
+  var words = splitTableWords(text);
+  empty.style.display='none';
+  table.style.display='';
+  table.innerHTML='';
+
+  // Single row
+  var row = document.createElement('tr');
+  row.setAttribute('role','row');
+
+  // ── Reference cell ───────────────────────────────────────────────────────
+  var refTd = document.createElement('td');
+  refTd.setAttribute('role','rowheader');
+  refTd.setAttribute('tabindex','0');
+  refTd.setAttribute('aria-label','Verse reference: '+ref+'. Press Down arrow to go to first word.');
+  refTd.textContent = ref;
+  refTd.style.cssText = 'font-family:"Playfair Display",serif;font-weight:700;font-size:17px;'+
+    'color:var(--gold-light);background:var(--navy);padding:10px 14px;'+
+    'border:2px solid var(--navy);min-width:80px;text-align:center;vertical-align:middle;white-space:nowrap;';
+  refTd.addEventListener('keydown', function(e){
+    if(e.key==='ArrowDown' || e.key==='ArrowRight'){
+      e.preventDefault();
+      if(cellEls.length) focusCell(0);
+    }
+  });
+  refTd.addEventListener('focus', function(){
+    // Make sure roving tabindex stays consistent
+    cellEls.forEach(function(c){ c.setAttribute('tabindex','-1'); });
+    refTd.setAttribute('tabindex','0');
+  });
+  row.appendChild(refTd);
+
+  var cellEls = []; // word td elements
+
+  // ── One td per word ───────────────────────────────────────────────────────
+  words.forEach(function(word, wi){
+    var td = document.createElement('td');
+    td.setAttribute('role','gridcell');
+    td.setAttribute('tabindex','-1');
+    // No aria-label on word cells — JAWS reads the cell text directly
+    td.setAttribute('data-wi', String(wi));
+    td.textContent = word;
+    td.style.cssText = 'font-size:18px;font-family:"Lato",Arial,sans-serif;font-weight:700;'+
+      'color:#102045;background:#fff;padding:10px 14px;border:2px solid #8a9ab0;'+
+      'text-align:center;vertical-align:middle;white-space:nowrap;cursor:default;';
+
+    td.addEventListener('keydown', function(e){
+      var wi2 = parseInt(this.getAttribute('data-wi'), 10);
+      // Block all arrow keys so browser never does caret/cell navigation
+      if(e.key==='ArrowUp' || e.key==='ArrowDown' ||
+         e.key==='ArrowLeft' || e.key==='ArrowRight'){
+        e.preventDefault();
+        if(e.ctrlKey){
+          if(e.key==='ArrowLeft'  || e.key==='ArrowUp')   focusCell(0);
+          if(e.key==='ArrowRight' || e.key==='ArrowDown') focusCell(cellEls.length-1);
+        } else {
+          if(e.key==='ArrowUp'   || e.key==='ArrowLeft'){
+            if(wi2 > 0) focusCell(wi2-1);
+            else { refTd.setAttribute('tabindex','0'); cellEls.forEach(function(c){c.setAttribute('tabindex','-1');}); refTd.focus(); }
+          }
+          if(e.key==='ArrowDown' || e.key==='ArrowRight'){
+            if(wi2+1 < cellEls.length) focusCell(wi2+1);
+            else {
+              // Move to Go to Hear Phrase button
+              cellEls.forEach(function(c){c.setAttribute('tabindex','-1');});
+              var gb=document.getElementById('wt-goto-btn');
+              if(gb) gb.focus();
+            }
+          }
+        }
+      } else if(e.key==='Home'){ e.preventDefault(); focusCell(0); }
+        else if(e.key==='End'){  e.preventDefault(); focusCell(cellEls.length-1); }
+    });
+
+    td.addEventListener('focus', function(){
+      var wi2=parseInt(this.getAttribute('data-wi'),10);
+      cellEls.forEach(function(c,i){ c.setAttribute('tabindex', i===wi2?'0':'-1'); });
+      refTd.setAttribute('tabindex','-1');
+    });
+
+    row.appendChild(td);
+    cellEls.push(td);
+  });
+
+  // ── Go to Hear Phrase button cell ─────────────────────────────────────────
+  var goBtnTd = document.createElement('td');
+  goBtnTd.style.cssText = 'border:2px solid #8a9ab0;padding:4px 8px;background:#fff;vertical-align:middle;';
+  var goBtn = document.createElement('button');
+  goBtn.id = 'wt-goto-btn';
+  goBtn.textContent = 'Go to Hear Phrase';
+  goBtn.setAttribute('aria-label','Go to Hear Phrase button in Phrase Builder game');
+  goBtn.style.cssText = 'font-size:16px;padding:10px 16px;min-height:44px;';
+  goBtn.addEventListener('click', function(){
+    var radios=Array.from(document.querySelectorAll('input[name="mode"]'));
+    var chunkRadio=radios.find(function(r){return r.value==='chunk';});
+    if(chunkRadio) chunkRadio.checked=true;
+    if(cRef===ref && cMode==='chunk'){
+      var hb=document.getElementById('hear-chunk-btn');
+      if(hb){ hb.scrollIntoView({block:'nearest',behavior:'instant'}); hb.focus(); }
+    } else {
+      beginGame(ref, text);
+      setTimeout(function(){
+        var hb=document.getElementById('hear-chunk-btn');
+        if(hb){ hb.scrollIntoView({block:'nearest',behavior:'instant'}); hb.focus(); }
+      },200);
+    }
+  });
+  goBtn.addEventListener('keydown', function(e){
+    if(e.key==='ArrowUp' || e.key==='ArrowLeft'){
+      e.preventDefault();
+      focusCell(cellEls.length-1);
+    }
+  });
+  goBtnTd.appendChild(goBtn);
+  row.appendChild(goBtnTd);
+
+  table.appendChild(row);
+
+  // ── Helper: focus a word cell by index ───────────────────────────────────
+  function focusCell(idx){
+    if(idx < 0) idx = 0;
+    if(idx >= cellEls.length) idx = cellEls.length-1;
+    refTd.setAttribute('tabindex','-1');
+    cellEls.forEach(function(c,i){ c.setAttribute('tabindex', i===idx?'0':'-1'); });
+    cellEls[idx].focus();
+  }
+
+  // ── Focus reference cell after table builds ─────────────────────────────
+  // Use 350ms so we always fire after focusFirstGameElement (150ms) settles
+  setTimeout(function(){
+    refTd.setAttribute('tabindex','0');
+    cellEls.forEach(function(c){ c.setAttribute('tabindex','-1'); });
+    refTd.scrollIntoView({block:'nearest',behavior:'instant'});
+    refTd.focus();
+  }, 350);
+}
+
+// Hook into beginGame so the table rebuilds whenever a verse loads
+var _origBeginGame = beginGame;
+beginGame = function(ref, text){
+  _origBeginGame(ref, text);
+  buildWordTable(ref, text);
+};
+// ─── END WORD TABLE ───────────────────────────────────────────────────────────
+
+// Page load — focus the pick-verse button so JAWS starts there
+setTimeout(function(){
+  var vb=document.getElementById('vlist-btn');
+  if(vb) vb.focus();
+},80);
 </script>
 
 
 
 
+
+
+<!-- VOICE & SPEECH SETTINGS -->
+<div class="section" id="voice-section" aria-labelledby="voice-heading">
+  <h2 id="voice-heading">Voice &amp; Speech Settings</h2>
+<div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label for="voice-select" style="font-weight:700;margin-bottom:0;">Speech voice:</label>
+    <select id="voice-select" style="width:auto;min-width:220px;" aria-describedby="voice-select-help"></select>
+    <span id="voice-count-lbl" aria-live="polite" style="font-size:15px;color:#506070;"></span>
+    <button id="voice-test-btn" class="small">Test voice</button>
+    <button id="voice-reload-btn" class="small">Reload voices</button>
+    <p id="voice-select-help" class="sr-only">Choose which voice speaks the verses. Press Test voice to hear a preview. On iPhone or iPad, press Test voice first and then Reload voices to unlock the full voice list. If the list is empty or missing voices press Reload voices.</p>
+  </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label for="rate-select" style="font-weight:700;margin-bottom:0;">Speech rate:</label>
+    <select id="rate-select" style="width:auto;min-width:160px;" aria-describedby="rate-select-help">
+      <option value="0.6">Very slow</option>
+      <option value="0.75">Slow</option>
+      <option value="0.92" selected>Normal</option>
+      <option value="1.1">Fast</option>
+      <option value="1.3">Very fast</option>
+    </select>
+    <p id="rate-select-help" class="sr-only">Choose how fast the voice reads verses.</p>
+  </div>
+</div>
+
+<!-- IMPORT VERSES -->
+<div class="section" id="import-section" aria-labelledby="import-heading">
+  <h2 id="import-heading">Import Verses</h2>
+  <p style="font-size:15px;color:#506070;margin-bottom:12px;">Import verses from a Bible.xlsm spreadsheet file.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+<button id="check-excel-btn">Import Bible.xlsm</button>
+    <button id="reimport-btn" style="display:none">Re-import Bible.xlsm</button>
+    <input type="file" id="excel-file" accept=".xlsx,.xls,.xlsm,.csv" style="display:none" aria-label="Choose Bible.xlsm workbook" />
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MEDITATION MODE SECTION
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="section" id="meditation-section" aria-labelledby="med-heading">
+  <h2 id="med-heading">Meditation Mode</h2>
+
+  <!-- Reflection time ticker -->
+  <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <label style="font-weight:700;color:#1b2c44;font-size:18px;">Reflection pause:</label>
+    <div id="med-timer-spinner"
+         role="spinbutton"
+         aria-label="Reflection time"
+         aria-valuemin="0"
+         aria-valuemax="3660"
+         aria-valuenow="60"
+         aria-valuetext="1 minute"
+         tabindex="0"
+         style="font-size:24px;font-weight:700;color:#102045;background:#fff;border:3px solid #8a9ab0;border-radius:12px;padding:10px 20px;min-width:130px;text-align:center;cursor:default;user-select:none;">
+      1 min
+    </div>
+  </div>
+
+  <!-- Current verse display -->
+  <div id="med-verse-display" role="region" aria-label="Current verse" style="background:var(--cream-dark);border:2px solid #c8b87a;border-radius:14px;padding:18px;margin-bottom:12px;min-height:80px;">
+    <p id="med-verse-ref" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#102045;margin-bottom:8px;">—</p>
+    <p id="med-verse-text" style="font-size:18px;color:#2a2a3e;line-height:1.7;font-style:italic;"></p>
+  </div>
+  <p id="med-status-combined" aria-live="polite" aria-atomic="true" style="font-size:17px;font-weight:700;color:#20354f;margin-bottom:6px;">Ready</p>
+  <p id="med-countdown-lbl" aria-hidden="true" style="font-size:17px;font-weight:700;color:#1d7f43;margin-bottom:12px;min-height:26px;"></p>
+
+  <!-- Playback controls -->
+  <div role="group" aria-label="Meditation playback controls" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <button id="med-play-btn"            class="primary" style="font-size:19px;padding:14px 28px;"  aria-label="Play meditation">&#9654; Play</button>
+    <button id="med-pause-btn"           style="font-size:19px;padding:14px 28px;display:none;"     aria-label="Pause">&#9646;&#9646; Pause</button>
+    <button id="med-skip-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Skip to next verse">Skip &#8250;</button>
+    <button id="med-prev-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Previous verse">&#8249; Previous</button>
+    <button id="med-stop-btn"            style="font-size:18px;padding:12px 20px;display:none;"     aria-label="Stop">&#9632; Stop</button>
+    <button id="med-restart-session-btn" style="font-size:18px;padding:12px 20px;"                  aria-label="Restart from verse 1">&#8634; Restart</button>
+  </div>
+
+  <!-- Setup panel — collapsed by default -->
+  <details id="med-setup-details" style="margin-top:8px;">
+    <summary style="font-size:17px;font-weight:700;color:#1b2c44;cursor:pointer;padding:8px 0;list-style:none;display:flex;align-items:center;gap:8px;">
+      <span>&#9881;</span> Setup &amp; Generate Audio
+    </summary>
+    <div id="med-setup-group" style="margin-top:14px;">
+      <div id="med-key-section" style="margin-bottom:20px;">
+        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">OpenAI API key</h3>
+        <label for="med-api-key" style="font-weight:700;display:block;margin-bottom:6px;color:#1b2c44;">Paste your key (starts with sk-):</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="password" id="med-api-key" placeholder="sk-..." style="width:340px;font-size:17px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;background:#fff;color:#102045;" autocomplete="off" spellcheck="false" />
+          <button id="med-save-key-btn" class="primary">Save Key</button>
+          <button id="med-clear-key-btn">Clear Key</button>
+        </div>
+        <p id="med-key-status" style="font-size:15px;margin-top:8px;color:#1d7f43;font-weight:700;" aria-live="polite"></p>
+      </div>
+      <hr aria-hidden="true" style="margin:12px 0;" />
+      <div style="margin-bottom:20px;">
+        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">Voice</h3>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label for="med-voice-select" style="font-weight:700;color:#1b2c44;">Voice:</label>
+          <select id="med-voice-select" style="font-size:17px;padding:10px 12px;border:2px solid #8a9ab0;border-radius:10px;min-width:200px;">
+            <option value="nova">Nova — warm female (recommended)</option>
+            <option value="shimmer">Shimmer — calm female</option>
+            <option value="alloy">Alloy — neutral</option>
+            <option value="echo">Echo — male</option>
+            <option value="fable">Fable — warm British male</option>
+            <option value="onyx">Onyx — deep male</option>
+          </select>
+          <button id="med-test-voice-btn">Test voice</button>
+        </div>
+      </div>
+      <hr aria-hidden="true" style="margin:12px 0;" />
+      <div style="margin-bottom:8px;">
+        <h3 style="font-size:18px;margin-bottom:8px;color:var(--navy);">Generate audio (one-time)</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="med-generate-btn" class="primary" style="font-size:18px;padding:14px 24px;">Generate all verse audio</button>
+          <button id="med-generate-new-btn" style="font-size:18px;padding:14px 24px;display:none;">Generate new verses only</button>
+        </div>
+        <div id="med-gen-progress" style="margin-top:12px;display:none;">
+          <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="med-gen-progress-wrap" aria-label="Audio generation progress" style="height:18px;background:#d4c9b0;border-radius:9px;overflow:hidden;margin-bottom:8px;">
+            <div id="med-gen-progress-bar" style="height:100%;background:var(--navy);width:0%;transition:width 0.3s;border-radius:9px;"></div>
+          </div>
+          <p id="med-gen-status" aria-live="polite" style="font-size:16px;color:#1b2c44;font-weight:700;"></p>
+        </div>
+        <p id="med-cache-status" style="font-size:15px;color:#506070;margin-top:10px;" aria-live="polite"></p>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// MEDITATION MODE JAVASCRIPT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+var MED_KEY_STORE   = 'bible-med-openai-key';
+var MED_POS_STORE   = 'bible-med-position';
+var MED_TIMER_STORE = 'bible-med-timer';
+var MED_VOICE_STORE = 'bible-med-voice';
+var MED_AUDIO_DB    = 'bible-med-audio-v1';
+var MED_AUDIO_STORE = 'audio';
+
+// Ticker steps: 0, 10s, 20s, 30s, 40s, 50s, then 1-60 min (values in seconds)
+var MED_TICKER_STEPS = (function(){
+  var s=[0,10,20,30,40,50];
+  for(var m=1;m<=60;m++) s.push(m*60);
+  return s;
+})();
+var medTickerIdx = 6; // index 6 = 60s = 1 minute default
+
+function medTickerSeconds(){ return MED_TICKER_STEPS[medTickerIdx]; }
+function medTickerLabel(sec){
+  if(sec===0) return '0 — back to back';
+  if(sec<60) return sec+' sec';
+  var m=sec/60; return m===1?'1 min':m+' min';
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────────────
+var medPlaying        = false;
+var medPaused         = false;
+var medCurrentIdx     = 0;
+var medCountdownTimer = null;
+var medCurrentAudio   = null;   // currently playing <audio> element (natural voice)
+var medUtterance      = null;   // current SpeechSynthesisUtterance (web voice fallback)
+var medTimerMinutes   = 1;      // legacy compat
+
+// ── AudioContext keep-alive — activates iOS AVAudioSession ───────────────────
+// iOS only routes media button / AirPod events to the browser when an
+// AudioContext is running. We create one synchronously inside the Play button's
+// click handler (the only reliable way to unlock audio on iOS), then keep a
+// near-silent oscillator running whenever meditation is active.
+var medAudioCtx       = null;
+var medSilentOsc      = null;
+var medSilentGain     = null;
+
+// Called SYNCHRONOUSLY inside the Play button click — must not be deferred.
+function medUnlockAudioContext(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!medAudioCtx){
+      medAudioCtx = new AC();
+    }
+    if(medAudioCtx.state === 'suspended'){
+      medAudioCtx.resume();   // synchronous call — iOS requires this in gesture stack
+    }
+  }catch(e){}
+}
+
+function medStartSilentAudio(){
+  try{
+    if(!medAudioCtx) return;
+    if(medAudioCtx.state === 'suspended') medAudioCtx.resume();
+    if(medSilentOsc) return;  // already running
+    medSilentGain = medAudioCtx.createGain();
+    medSilentGain.gain.setValueAtTime(0.001, medAudioCtx.currentTime); // inaudible
+    medSilentGain.connect(medAudioCtx.destination);
+    medSilentOsc = medAudioCtx.createOscillator();
+    medSilentOsc.frequency.setValueAtTime(1, medAudioCtx.currentTime); // 1 Hz — inaudible
+    medSilentOsc.connect(medSilentGain);
+    medSilentOsc.start();
+  }catch(e){}
+}
+
+function medStopSilentAudio(){
+  try{
+    if(medSilentOsc){ medSilentOsc.stop(); medSilentOsc.disconnect(); medSilentOsc=null; }
+    if(medSilentGain){ medSilentGain.disconnect(); medSilentGain=null; }
+    if(medAudioCtx && medAudioCtx.state === 'running') medAudioCtx.suspend();
+  }catch(e){}
+}
+
+// ── Chime (Web Audio — no file needed) ────────────────────────────────────────────
+function playChime(frequency, duration, volume){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    var ctx = new AC();
+    var osc  = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency||528, ctx.currentTime);
+    gain.gain.setValueAtTime(volume||0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (duration||1.8));
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + (duration||1.8));
+    osc.onended = function(){ try{ ctx.close(); }catch(e){} };
+  }catch(e){}
+}
+// Warning chime at 10 sec: soft gentle bell
+function playWarningChime(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    var ctx = new AC();
+    var osc=ctx.createOscillator();
+    var gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type='sine';
+    osc.frequency.setValueAtTime(528, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime+0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+2.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+2.5);
+    osc.onended = function(){ try{ ctx.close(); }catch(e){} };
+  }catch(e){}
+}
+
+// ── Ticker (replaces spinner) ──────────────────────────────────────────────────────────────
+function medSetTicker(idx){
+  idx = Math.max(0, Math.min(MED_TICKER_STEPS.length-1, idx));
+  medTickerIdx = idx;
+  var sec = medTickerSeconds();
+  medTimerMinutes = sec/60; // keep legacy var in sync
+  var el = document.getElementById('med-timer-spinner');
+  if(el){
+    var lbl = medTickerLabel(sec);
+    el.textContent = lbl;
+    el.setAttribute('aria-valuenow', sec);
+    el.setAttribute('aria-valuetext', lbl);
+  }
+  try{ localStorage.setItem(MED_TIMER_STORE, String(sec)); }catch(e){}
+}
+function initSpinner(){
+  // Restore saved value (saved as seconds now)
+  try{
+    var saved=localStorage.getItem(MED_TIMER_STORE);
+    if(saved!==null){
+      var sec=parseInt(saved,10)||0;
+      var best=0;
+      MED_TICKER_STEPS.forEach(function(v,i){ if(v<=sec) best=i; });
+      medSetTicker(best);
+    } else { medSetTicker(medTickerIdx); }
+  }catch(e){ medSetTicker(medTickerIdx); }
+
+  var el = document.getElementById('med-timer-spinner');
+  if(!el) return;
+
+  // Keyboard: left/right arrows step through ticker (JAWS spinbutton)
+  el.addEventListener('keydown', function(e){
+    if(e.key==='ArrowRight'||e.key==='ArrowUp'){ e.preventDefault(); medSetTicker(medTickerIdx+1); }
+    else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){ e.preventDefault(); medSetTicker(medTickerIdx-1); }
+    else if(e.key==='Home'){ e.preventDefault(); medSetTicker(0); }
+    else if(e.key==='End'){ e.preventDefault(); medSetTicker(MED_TICKER_STEPS.length-1); }
+  });
+  // Touch flick
+  var touchStartY=0;
+  el.addEventListener('touchstart',function(e){ touchStartY=e.touches[0].clientY; },{passive:true});
+  el.addEventListener('touchend',function(e){
+    var dy=touchStartY-e.changedTouches[0].clientY;
+    if(Math.abs(dy)>10){ medSetTicker(medTickerIdx+(dy>0?1:-1)); }
+  });
+  // Mouse wheel
+  el.addEventListener('wheel',function(e){
+    e.preventDefault();
+    medSetTicker(medTickerIdx+(e.deltaY<0?1:-1));
+  },{passive:false});
+
+}
+
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function saveMedPosition(idx){ try{ localStorage.setItem(MED_POS_STORE,String(idx)); }catch(e){} }
+function loadMedPosition(){ try{ var v=localStorage.getItem(MED_POS_STORE); return v!==null?parseInt(v,10):0; }catch(e){ return 0; } }
+
+function getMedApiKey(){ try{ return localStorage.getItem(MED_KEY_STORE)||''; }catch(e){ return ''; } }
+function saveMedApiKey(k){ try{ localStorage.setItem(MED_KEY_STORE,k); }catch(e){} }
+function clearMedApiKey(){ try{ localStorage.removeItem(MED_KEY_STORE); }catch(e){} }
+function getMedVoice(){ var s=document.getElementById('med-voice-select'); return s?s.value:'nova'; }
+function saveMedVoicePref(){ try{ localStorage.setItem(MED_VOICE_STORE,getMedVoice()); }catch(e){} }
+function loadMedVoicePref(){ try{ var v=localStorage.getItem(MED_VOICE_STORE); if(v){ var s=document.getElementById('med-voice-select'); if(s) s.value=v; } }catch(e){} }
+
+// ── IndexedDB audio cache ──────────────────────────────────────────────────────
+function openAudioDB(){
+  return new Promise(function(res,rej){
+    var req=indexedDB.open(MED_AUDIO_DB,1);
+    req.onupgradeneeded=function(e){ e.target.result.createObjectStore(MED_AUDIO_STORE); };
+    req.onsuccess=function(e){ res(e.target.result); };
+    req.onerror=function(){ rej(new Error('IndexedDB open failed')); };
+  });
+}
+function audioDB_get(db,key){
+  return new Promise(function(res,rej){
+    var tx=db.transaction(MED_AUDIO_STORE,'readonly');
+    var req=tx.objectStore(MED_AUDIO_STORE).get(key);
+    req.onsuccess=function(){ res(req.result||null); };
+    req.onerror=function(){ rej(); };
+  });
+}
+function audioDB_put(db,key,blob){
+  return new Promise(function(res,rej){
+    var tx=db.transaction(MED_AUDIO_STORE,'readwrite');
+    tx.objectStore(MED_AUDIO_STORE).put(blob,key);
+    tx.oncomplete=function(){ res(); };
+    tx.onerror=function(){ rej(); };
+  });
+}
+function audioDB_keys(db){
+  return new Promise(function(res,rej){
+    var tx=db.transaction(MED_AUDIO_STORE,'readonly');
+    var req=tx.objectStore(MED_AUDIO_STORE).getAllKeys();
+    req.onsuccess=function(){ res(req.result||[]); };
+    req.onerror=function(){ rej(); };
+  });
+}
+
+// ── OpenAI TTS ────────────────────────────────────────────────────────────────
+function fetchVerseAudio(apiKey,voice,text){
+  return fetch('https://api.openai.com/v1/audio/speech',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'tts-1',voice:voice,input:text,speed:0.88})
+  }).then(function(resp){
+    if(!resp.ok) return resp.json().then(function(e){ throw new Error((e.error&&e.error.message)||('HTTP '+resp.status)); });
+    return resp.blob();
+  });
+}
+
+// ── Cache status ──────────────────────────────────────────────────────────────
+function medUpdateCacheStatus(){
+  openAudioDB().then(function(db){
+    audioDB_keys(db).then(function(keys){
+      var verses=getMedVerseList(), cached=keys.length, total=verses.length;
+      var el=document.getElementById('med-cache-status'); if(!el) return;
+      if(cached===0) el.textContent='No audio cached. Press Generate all verse audio first.';
+      else if(cached<total){
+        el.textContent=cached+' of '+total+' verses cached.';
+        var nb=document.getElementById('med-generate-new-btn'); if(nb) nb.style.display='';
+      } else {
+        el.textContent='All '+total+' verses cached and ready.';
+        var nb=document.getElementById('med-generate-new-btn'); if(nb) nb.style.display='';
+      }
+    });
+  }).catch(function(){});
+}
+
+// ── Generate audio ────────────────────────────────────────────────────────────
+async function medGenerateAudio(newOnly){
+  var apiKey=getMedApiKey();
+  if(!apiKey||!apiKey.startsWith('sk-')){
+    announce('Please save a valid OpenAI API key first.');
+    var st=document.getElementById('med-key-status');
+    if(st){ st.textContent='Please enter and save your API key first.'; st.style.color='#9b111e'; }
+    var ki=document.getElementById('med-api-key'); if(ki) ki.focus();
+    return;
+  }
+  var verses=getMedVerseList(), voice=getMedVoice();
+  var genBtn=document.getElementById('med-generate-btn'), newBtn=document.getElementById('med-generate-new-btn');
+  var progWrap=document.getElementById('med-gen-progress'), progBar=document.getElementById('med-gen-progress-bar');
+  var progEl=document.getElementById('med-gen-progress-wrap'), statusEl=document.getElementById('med-gen-status');
+  if(genBtn) genBtn.disabled=true; if(newBtn) newBtn.disabled=true;
+  if(progWrap) progWrap.style.display=''; if(statusEl) statusEl.textContent='Opening audio cache…';
+  var db; try{ db=await openAudioDB(); }
+  catch(e){ if(statusEl) statusEl.textContent='Could not open cache: '+e.message; if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false; return; }
+  var existingKeys=[]; if(newOnly){ try{ existingKeys=await audioDB_keys(db); }catch(e){} }
+  var toGen=newOnly?verses.filter(function(v){ return existingKeys.indexOf(v.ref)<0; }):verses;
+  if(!toGen.length){ if(statusEl) statusEl.textContent='All audio already cached.'; if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false; medUpdateCacheStatus(); return; }
+  var done=0, errors=[];
+  for(var i=0;i<toGen.length;i++){
+    var v=toGen[i];
+    if(statusEl) statusEl.textContent='Generating '+(i+1)+' of '+toGen.length+': '+v.ref+'…';
+    if(i===0||i%10===0) announce('Generating verse '+(i+1)+' of '+toGen.length);
+    try{
+      var blob=await fetchVerseAudio(apiKey,voice,spokenRef(v.ref)+'. '+v.text);
+      await audioDB_put(db,v.ref,blob); done++;
+    }catch(err){ errors.push(v.ref+': '+err.message); }
+    var pct=Math.round(((i+1)/toGen.length)*100);
+    if(progBar) progBar.style.width=pct+'%'; if(progEl) progEl.setAttribute('aria-valuenow',pct);
+    if(i<toGen.length-1) await new Promise(function(r){ setTimeout(r,300); });
+  }
+  if(genBtn) genBtn.disabled=false; if(newBtn) newBtn.disabled=false;
+  if(errors.length){ if(statusEl){ statusEl.textContent=done+' done, '+errors.length+' failed: '+errors.join('; '); statusEl.style.color='#9b111e'; } }
+  else{ if(statusEl){ statusEl.textContent='Done! All '+done+' verses cached.'; statusEl.style.color='#1d7f43'; } announce('Done. '+done+' verses ready.'); }
+  medUpdateCacheStatus();
+}
+
+function getMedVerseList(){
+  return Object.keys(VERSES).map(function(ref){ return {ref:ref,text:VERSES[ref]}; });
+}
+function spokenRef(ref){
+  return ref.replace(/(\d+):(\d+)-(\d+)/g,'$1, verses $2 through $3').replace(/(\d+):(\d+)/g,'$1, verse $2');
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function medSetStatus(msg){
+  var el=document.getElementById('med-status-combined'); if(el) el.textContent=msg;
+}
+function medSetCountdown(txt){
+  var el=document.getElementById('med-countdown-lbl'); if(el) el.textContent=txt;
+}
+function medShowVerse(ref,text){
+  document.getElementById('med-verse-ref').textContent  = ref||'—';
+  document.getElementById('med-verse-text').textContent = text||'';
+}
+
+// Show only the buttons relevant to current state
+// states: 'idle' | 'playing' | 'paused' | 'reflecting' | 'done'
+function medSetButtons(state){
+  var play    = document.getElementById('med-play-btn');
+  var pause   = document.getElementById('med-pause-btn');
+  var skip    = document.getElementById('med-skip-btn');
+  var prev    = document.getElementById('med-prev-btn');
+  var stop    = document.getElementById('med-stop-btn');
+  var restart = document.getElementById('med-restart-session-btn');
+  var show = function(el,vis){ if(el) el.style.display=vis?'':'none'; };
+
+  show(play,    state==='idle'||state==='paused'||state==='done');
+  show(pause,   state==='playing'||state==='reflecting');
+  show(skip,    state==='playing'||state==='paused'||state==='reflecting');
+  show(prev,    state==='playing'||state==='paused'||state==='reflecting');
+  show(stop,    state==='playing'||state==='paused'||state==='reflecting');
+  show(restart, true); // always visible
+}
+
+// ── Media Session ─────────────────────────────────────────────────────────────
+function medUpdateMediaSession(ref,text){
+  if(!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: ref||'Bible Meditation',
+    artist: 'Bible Verse Meditation',
+    album: text?text.substring(0,80):''
+  });
+}
+
+// ── Release a natural voice audio element safely ───────────────────────────
+function medReleaseAudio(audio){
+  if(!audio) return;
+  try{ audio.pause(); audio.onended=null; audio.onerror=null; }catch(e){}
+  if(audio._blobUrl){ try{ URL.revokeObjectURL(audio._blobUrl); }catch(e){} audio._blobUrl=null; }
+}
+
+// ── Play verse at index — natural voice first, web speech fallback ─────────
+// No pre-loading: fetch blob fresh each time from IndexedDB.
+// This eliminates the race condition that caused verse 3+ to fail.
+// The silent oscillator bridges the gap between verses so iOS keeps the
+// audio session alive through the reflection countdown.
+async function medPlayVerseAtIndex(idx){
+  var verses=getMedVerseList();
+  if(idx<0||idx>=verses.length) return;
+  var v=verses[idx];
+
+  // Stop whatever was playing
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+
+  medCurrentIdx=idx; saveMedPosition(idx);
+  medShowVerse(v.ref,v.text);
+  medSetStatus('Playing verse '+(idx+1)+' of '+verses.length+': '+v.ref);
+  medSetCountdown('');
+  medSetButtons('playing');
+  announce('Now playing: '+v.ref);
+  medUpdateMediaSession(v.ref,v.text);
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
+
+  // ── Try natural voice (IndexedDB cache) ───────────────────────────────────
+  var blob = null;
+  try{
+    var db = await openAudioDB();
+    blob = await audioDB_get(db, v.ref);
+  }catch(e){ blob=null; }
+
+  if(blob){
+    // Natural voice path — real <audio> element, activates iOS AVAudioSession
+    medStopSilentAudio(); // real audio takes over, oscillator not needed while playing
+    var url = URL.createObjectURL(blob);
+    var audio = new Audio(url);
+    audio._blobUrl = url;
+    medCurrentAudio = audio;
+
+    audio.onended = function(){
+      medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+      if(medPlaying&&!medPaused){
+        medStartSilentAudio(); // bridge the gap during countdown
+        medAdvanceAfterDelay();
+      }
+    };
+    audio.onerror = function(){
+      medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+      if(medPlaying&&!medPaused) medPlayVerseAtIndexWebSpeech(idx); // fallback
+    };
+
+    var p=audio.play();
+    if(p&&typeof p.catch==='function'){
+      p.catch(function(){
+        // iOS blocked play — try resuming AudioContext then retry
+        if(medAudioCtx&&medAudioCtx.state==='suspended'){
+          medAudioCtx.resume().then(function(){ audio.play().catch(function(){
+            medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+            medPlayVerseAtIndexWebSpeech(idx);
+          }); });
+        } else {
+          medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+          medPlayVerseAtIndexWebSpeech(idx);
+        }
+      });
+    }
+    return;
+  }
+
+  // ── Web Speech fallback (no cache) ────────────────────────────────────────
+  medPlayVerseAtIndexWebSpeech(idx);
+}
+
+function medPlayVerseAtIndexWebSpeech(idx){
+  var verses=getMedVerseList();
+  if(idx<0||idx>=verses.length) return;
+  var v=verses[idx];
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(spokenRef(v.ref)+'. '+v.text);
+  var voice=getBestVoice(); if(voice) u.voice=voice;
+  u.rate=getSpeechRate(); u.pitch=1; u.volume=1;
+  u.onend=function(){
+    medUtterance=null;
+    if(medPlaying&&!medPaused) medAdvanceAfterDelay();
+  };
+  u.onerror=function(){
+    medUtterance=null;
+    if(medPlaying&&!medPaused) medAdvanceAfterDelay();
+  };
+  medUtterance=u;
+  try{ window.speechSynthesis.speak(u); }catch(e){ if(medPlaying&&!medPaused) medAdvanceAfterDelay(); }
+}
+
+// ── Countdown ─────────────────────────────────────────────────────────────────
+// Stores end timestamp; corrects drift on every tick after screen wakes
+function medStartCountdown(totalSec, onComplete){
+  if(totalSec<=0){ onComplete(); return; }
+  var endTS=Date.now()+(totalSec*1000);
+  var chimed10=false;
+
+  medSetButtons('reflecting');
+  medSetStatus('Reflecting…');
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
+
+  function tick(){
+    if(!medPlaying||medPaused){ return; }
+    var remaining=Math.ceil((endTS-Date.now())/1000);
+    if(remaining<=0){ medSetCountdown(''); onComplete(); return; }
+
+    var m=Math.floor(remaining/60), s=remaining%60;
+    var display=m>0?m+' min '+(s<10?'0':'')+s+' sec':s+' sec';
+    medSetCountdown('Reflecting: '+display+' remaining');
+
+    // Chime at 10 seconds (only when reflection time is 1 minute or more)
+    if(remaining<=10&&!chimed10&&totalSec>=60){ chimed10=true; playWarningChime(); }
+
+    medCountdownTimer=setTimeout(tick,500);
+  }
+  tick();
+}
+
+
+function medAdvanceAfterDelay(){
+  var totalSec=medTickerSeconds();
+  medStartCountdown(totalSec, function(){
+    medNextVerse();
+  });
+}
+
+function medNextVerse(){
+  var verses=getMedVerseList();
+  var next=medCurrentIdx+1;
+  if(next>=verses.length){
+    medSetStatus('All verses complete. Well done!');
+    medSetCountdown('');
+    announce('All verses read. Session complete.');
+    if('mediaSession' in navigator) navigator.mediaSession.playbackState='none';
+    medSetButtons('done');
+    medPlaying=false; medPaused=false;
+    medCurrentIdx=0; saveMedPosition(0);
+    return;
+  }
+  medPlayVerseAtIndex(next);
+}
+
+// ── Focus helper — keeps JAWS on the right button ────────────────────────────
+function medFocusPlayPause(){
+  setTimeout(function(){
+    var btn=document.getElementById(medPlaying?'med-pause-btn':'med-play-btn');
+    if(btn && btn.style.display!=='none') btn.focus();
+  },50);
+}
+function medPlay(){
+  if(medPaused){
+    medPaused=false; medPlaying=true;
+    medStartSilentAudio();
+    medSetButtons('playing');
+    if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
+    announce('Resumed.');
+    // Was paused during countdown — restart countdown from current verse
+    medAdvanceAfterDelay();
+    medFocusPlayPause();
+    return;
+  }
+  medPlaying=true; medPaused=false;
+  medStartSilentAudio();
+  var saved=loadMedPosition();
+  var verses=getMedVerseList();
+  if(saved>=verses.length) saved=0;
+  medPlayVerseAtIndex(saved);
+  medFocusPlayPause();
+}
+
+function medPause(){
+  if(!medPlaying&&!medPaused) return;
+  medPaused=true; medPlaying=false;
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medStopSilentAudio();
+  medSetButtons('paused');
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='paused';
+  medSetStatus('Paused — press Play or Space to resume');
+  announce('Paused.');
+  medFocusPlayPause();
+}
+
+function medStop(){
+  medPlaying=false; medPaused=false;
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medStopSilentAudio();
+  medSetButtons('idle');
+  medSetCountdown('');
+  if('mediaSession' in navigator) navigator.mediaSession.playbackState='none';
+  medSetStatus('Stopped');
+}
+
+function medSkip(){
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medSetCountdown('');
+  var verses=getMedVerseList();
+  var next=Math.min(medCurrentIdx+1,verses.length-1);
+  if(medPlaying||medPaused){
+    medPaused=false; medPlaying=true;
+    medPlayVerseAtIndex(next);
+    medFocusPlayPause();
+  } else {
+    medCurrentIdx=next; saveMedPosition(next);
+    medShowVerse(verses[next].ref,verses[next].text);
+    medSetStatus('Verse '+(next+1)+' of '+verses.length+': '+verses[next].ref+' — press Play');
+    announce('Skipped to '+verses[next].ref);
+  }
+}
+
+function medPrev(){
+  if(medCountdownTimer){ clearTimeout(medCountdownTimer); medCountdownTimer=null; }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  medUtterance=null;
+  medReleaseAudio(medCurrentAudio); medCurrentAudio=null;
+  medSetCountdown('');
+  var verses=getMedVerseList();
+  var prev=Math.max(medCurrentIdx-1,0);
+  if(medPlaying||medPaused){
+    medPaused=false; medPlaying=true;
+    medPlayVerseAtIndex(prev);
+    medFocusPlayPause();
+  } else {
+    medCurrentIdx=prev; saveMedPosition(prev);
+    medShowVerse(verses[prev].ref,verses[prev].text);
+    medSetStatus('Verse '+(prev+1)+' of '+verses.length+': '+verses[prev].ref+' — press Play');
+    announce('Moved to '+verses[prev].ref);
+  }
+}
+
+function medRestartSession(){
+  medStop(); medCurrentIdx=0; saveMedPosition(0);
+  var verses=getMedVerseList();
+  if(verses.length){ medShowVerse(verses[0].ref,verses[0].text); }
+  medSetStatus('Ready — press Play to start from '+(verses[0]?verses[0].ref:'verse 1'));
+  announce('Restarted. Press Play to begin from '+(verses[0]?verses[0].ref:'verse 1')+'.');
+}
+
+// ── Setup panel button wiring ─────────────────────────────────────────────────
+document.getElementById('med-save-key-btn').addEventListener('click',function(){
+  var val=document.getElementById('med-api-key').value.trim();
+  var st=document.getElementById('med-key-status');
+  if(!val){ st.textContent='Please enter your API key.'; st.style.color='#9b111e'; announce('Please enter your API key.'); return; }
+  if(!val.startsWith('sk-')){ st.textContent='Key should start with sk-'; st.style.color='#9b111e'; announce('Invalid key format.'); return; }
+  saveMedApiKey(val); document.getElementById('med-api-key').value='';
+  st.textContent='API key saved in this browser.'; st.style.color='#1d7f43';
+  announce('API key saved.'); medUpdateCacheStatus();
+});
+document.getElementById('med-clear-key-btn').addEventListener('click',function(){
+  clearMedApiKey(); document.getElementById('med-api-key').value='';
+  var st=document.getElementById('med-key-status');
+  st.textContent='Key cleared.'; st.style.color='#506070'; announce('API key cleared.');
+});
+document.getElementById('med-test-voice-btn').addEventListener('click',async function(){
+  medUnlockAudioContext();
+  var apiKey=getMedApiKey();
+  if(!apiKey){ announce('Please save your API key first.'); return; }
+  var voice=getMedVoice(); saveMedVoicePref(); announce('Testing voice '+voice+'…');
+  try{
+    var blob=await fetchVerseAudio(apiKey,voice,'The LORD is my shepherd. I shall not be in want. Psalm 23, verse 1.');
+    var url=URL.createObjectURL(blob);
+    var a=new Audio(url); a.onended=function(){ URL.revokeObjectURL(url); }; a.play();
+  }catch(err){
+    announce('Voice test failed: '+err.message);
+    var st=document.getElementById('med-key-status');
+    st.textContent='Voice test failed: '+err.message; st.style.color='#9b111e';
+  }
+});
+document.getElementById('med-generate-btn').addEventListener('click',function(){ saveMedVoicePref(); medGenerateAudio(false); });
+document.getElementById('med-generate-new-btn').addEventListener('click',function(){ saveMedVoicePref(); medGenerateAudio(true); });
+document.getElementById('med-voice-select').addEventListener('change',saveMedVoicePref);
+document.getElementById('med-play-btn').addEventListener('click',function(){
+  medUnlockAudioContext();  // must be synchronous in gesture handler for iOS
+  medPlay();
+});
+document.getElementById('med-pause-btn').addEventListener('click',medPause);
+document.getElementById('med-skip-btn').addEventListener('click',medSkip);
+document.getElementById('med-prev-btn').addEventListener('click',medPrev);
+document.getElementById('med-stop-btn').addEventListener('click',function(){ medStop(); announce('Stopped.'); });
+document.getElementById('med-restart-session-btn').addEventListener('click',medRestartSession);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(function initMeditation(){
+  loadMedVoicePref();
+  initSpinner();
+  var existingKey=getMedApiKey();
+  var st=document.getElementById('med-key-status');
+  if(existingKey&&st){ st.textContent='API key is saved in this browser.'; st.style.color='#1d7f43'; }
+  var verses=getMedVerseList();
+  var saved=loadMedPosition();
+  if(saved>=verses.length) saved=0;
+  medCurrentIdx=saved;
+  if(verses.length){ medShowVerse(verses[saved].ref,verses[saved].text); }
+  medSetStatus('Verse '+(saved+1)+' of '+verses.length+' — press Play to begin from '+(verses[saved]?verses[saved].ref:'first verse'));
+  medSetButtons('idle');
+  medUpdateCacheStatus();
+  if('mediaSession' in navigator){
+    navigator.mediaSession.setActionHandler('play',          medPlay);
+    navigator.mediaSession.setActionHandler('pause',         medPause);
+    navigator.mediaSession.setActionHandler('stop',          medStop);
+    navigator.mediaSession.setActionHandler('nexttrack',     medSkip);
+    navigator.mediaSession.setActionHandler('previoustrack', medPrev);
+    // Some headphone firmware fires seekforward/seekbackward for 2×/3× clicks
+    try{ navigator.mediaSession.setActionHandler('seekforward',  medSkip); }catch(e){}
+    try{ navigator.mediaSession.setActionHandler('seekbackward', medPrev); }catch(e){}
+  }
+})();
+</script>
 
 </div><!-- end page-body -->
 </body>
