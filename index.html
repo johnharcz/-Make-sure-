@@ -120,9 +120,7 @@ hr{border:none;border-top:1px solid #d4c9b0;margin:20px 0;}
 #word-table{border-collapse:collapse;white-space:nowrap;}
 #word-table td{border:2px solid #8a9ab0;padding:0;background:#fff;vertical-align:middle;}
 #word-table td:first-child{background:var(--navy);color:var(--gold-light);font-family:'Playfair Display',serif;font-weight:700;font-size:17px;padding:8px 14px;min-width:80px;text-align:center;border-color:var(--navy);}
-#word-table td:focus{outline:4px solid #ffbf47;outline-offset:-2px;background:var(--primary-soft);}
-#word-table td.wt-ref:focus{background:var(--navy-mid);}
-body.hc #word-table td:focus{outline:4px solid #ffff00!important;background:#e0e0ff!important;}
+/* word table focus handled inline by JS */
 #wt-goto-btn{margin-left:12px;font-size:16px;padding:10px 16px;min-height:44px;}
 #word-table-empty{font-size:17px;color:#506070;font-style:italic;}
 body.hc #word-table-section{background:#fff!important;border:3px solid #ffff00!important;}
@@ -3011,14 +3009,11 @@ if(document.readyState==='loading'){
 })();
 // ─── WORD-BY-WORD MEMORIZATION TABLE ─────────────────────────────────────────
 function splitTableWords(text){
-  // Known short words that get glued to adjacent words in stored verse text
   var GLUED = /^(if|or|the|and|but|nor|yet|so|to|in|on|at|by|as|an|a|is|it|be|do|go|he|me|my|no|of|up|us|we|think|things|through|that|this|than|then|them|their|there|these|those|with|from|into|unto|upon|over|under|about|above|after|before|every|never|other|shall|since|until|where|which|while|whose|will|your|you|who|was|were|what|when|also|even|just|like|more|most|much|only|such|very|well|been|have|here|made|make|many|must|need|now|our|out|own|him|his|her|its|did|can|all|any|had|has|how|let|man|men|new|old|one|say|yes|i|o)$/i;
   var raw = text.split(/\s+/).filter(Boolean);
   var out = [];
   raw.forEach(function(w){
-    // First split on camelCase (lowercase-to-uppercase boundary)
     var parts = w.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ');
-    // Then check each part for a glued common word at the end
     parts.forEach(function(p){
       if(!p) return;
       var found = false;
@@ -3026,10 +3021,7 @@ function splitTableWords(text){
         var suffix = p.slice(p.length - len);
         var prefix = p.slice(0, p.length - len);
         if(prefix.length >= 2 && GLUED.test(suffix)){
-          out.push(prefix);
-          out.push(suffix);
-          found = true;
-          break;
+          out.push(prefix); out.push(suffix); found = true; break;
         }
       }
       if(!found) out.push(p);
@@ -3052,68 +3044,81 @@ function buildWordTable(ref, text){
 
   var words = splitTableWords(text);
   empty.style.display='none';
-  table.style.display='';
-  table.innerHTML='';
 
-  // Single row
-  var row = document.createElement('tr');
-  // no role on row — presentation table
+  // Use a flex div row instead of a real table so VoiceOver doesn't say "column N"
+  table.style.display='none'; // hide the real table element — we use word-table-wrap directly
+  // Clear any previous div row
+  var oldRow = document.getElementById('wt-div-row');
+  if(oldRow) oldRow.parentNode.removeChild(oldRow);
+
+  var row = document.createElement('div');
+  row.id = 'wt-div-row';
+  row.setAttribute('aria-label', 'Verse words');
+  row.style.cssText = 'display:flex;flex-wrap:nowrap;overflow-x:auto;align-items:stretch;gap:0;';
 
   // ── Reference cell ───────────────────────────────────────────────────────
-  var refTd = document.createElement('td');
-  // no role on ref cell
-  refTd.setAttribute('tabindex','0');
-  refTd.className = 'wt-ref';
-  refTd.setAttribute('aria-label','Verse reference: '+ref+'. Press Down arrow to go to first word.');
-  refTd.textContent = ref;
-  refTd.style.cssText = 'font-family:"Playfair Display",serif;font-weight:700;font-size:17px;'+
+  var refDiv = document.createElement('div');
+  refDiv.id = 'wt-ref-cell';
+  refDiv.setAttribute('tabindex','0');
+  refDiv.setAttribute('aria-label','Verse reference: '+ref+'. Press Down or Right arrow to go to first word.');
+  refDiv.textContent = ref;
+  refDiv.style.cssText = 'font-family:"Playfair Display",serif;font-weight:700;font-size:17px;'+
     'color:var(--gold-light);background:var(--navy);padding:10px 14px;'+
-    'border:2px solid var(--navy);min-width:80px;text-align:center;vertical-align:middle;white-space:nowrap;';
-  refTd.addEventListener('keydown', function(e){
-    if(e.key==='ArrowDown' || e.key==='ArrowRight'){
+    'border:2px solid var(--navy);min-width:80px;text-align:center;'+
+    'display:flex;align-items:center;justify-content:center;white-space:nowrap;flex-shrink:0;cursor:default;';
+  refDiv.addEventListener('keydown', function(e){
+    if(e.key==='ArrowDown'||e.key==='ArrowRight'){
       e.preventDefault();
       if(cellEls.length) focusCell(0);
     }
   });
-  refTd.addEventListener('focus', function(){
-    // Make sure roving tabindex stays consistent
+  refDiv.addEventListener('focus', function(){
     cellEls.forEach(function(c){ c.setAttribute('tabindex','-1'); });
-    refTd.setAttribute('tabindex','0');
+    refDiv.setAttribute('tabindex','0');
+    this.style.outline='4px solid #ffbf47';
+    this.style.outlineOffset='-2px';
+    this.style.background='var(--navy-mid)';
   });
-  row.appendChild(refTd);
+  refDiv.addEventListener('blur', function(){
+    this.style.outline='none';
+    this.style.background='var(--navy)';
+  });
+  row.appendChild(refDiv);
 
-  var cellEls = []; // word td elements
+  var cellEls = [];
 
-  // ── One td per word ───────────────────────────────────────────────────────
+  // ── One div per word ─────────────────────────────────────────────────────
   words.forEach(function(word, wi){
-    var td = document.createElement('td');
-    // no role on word cells
-    td.setAttribute('tabindex','-1');
-    // No aria-label on word cells — JAWS reads the cell text directly
-    td.setAttribute('data-wi', String(wi));
-    td.textContent = word;
-    td.style.cssText = 'font-size:18px;font-family:"Lato",Arial,sans-serif;font-weight:700;'+
-      'color:#102045;background:#fff;padding:10px 14px;border:2px solid #8a9ab0;'+
-      'text-align:center;vertical-align:middle;white-space:nowrap;cursor:default;';
+    var div = document.createElement('div');
+    div.setAttribute('tabindex','-1');
+    div.setAttribute('data-wi', String(wi));
+    div.textContent = word;
+    div.style.cssText = 'font-size:18px;font-family:"Lato",Arial,sans-serif;font-weight:700;'+
+      'color:#102045;background:#fff;padding:10px 14px;'+
+      'border:2px solid #8a9ab0;border-left:none;'+
+      'text-align:center;white-space:nowrap;flex-shrink:0;'+
+      'display:flex;align-items:center;justify-content:center;cursor:default;';
 
-    td.addEventListener('keydown', function(e){
+    div.addEventListener('keydown', function(e){
       var wi2 = parseInt(this.getAttribute('data-wi'), 10);
-      // Block all arrow keys so browser never does caret/cell navigation
-      if(e.key==='ArrowUp' || e.key==='ArrowDown' ||
-         e.key==='ArrowLeft' || e.key==='ArrowRight'){
+      if(e.key==='ArrowUp'||e.key==='ArrowDown'||
+         e.key==='ArrowLeft'||e.key==='ArrowRight'){
         e.preventDefault();
         if(e.ctrlKey){
-          if(e.key==='ArrowLeft'  || e.key==='ArrowUp')   focusCell(0);
-          if(e.key==='ArrowRight' || e.key==='ArrowDown') focusCell(cellEls.length-1);
+          if(e.key==='ArrowLeft'||e.key==='ArrowUp')   focusCell(0);
+          if(e.key==='ArrowRight'||e.key==='ArrowDown') focusCell(cellEls.length-1);
         } else {
-          if(e.key==='ArrowUp'   || e.key==='ArrowLeft'){
-            if(wi2 > 0) focusCell(wi2-1);
-            else { refTd.setAttribute('tabindex','0'); cellEls.forEach(function(c){c.setAttribute('tabindex','-1');}); refTd.focus(); }
-          }
-          if(e.key==='ArrowDown' || e.key==='ArrowRight'){
-            if(wi2+1 < cellEls.length) focusCell(wi2+1);
+          if(e.key==='ArrowUp'||e.key==='ArrowLeft'){
+            if(wi2>0) focusCell(wi2-1);
             else {
-              // Move to Go to Hear Phrase button
+              cellEls.forEach(function(c){c.setAttribute('tabindex','-1');});
+              refDiv.setAttribute('tabindex','0');
+              refDiv.focus();
+            }
+          }
+          if(e.key==='ArrowDown'||e.key==='ArrowRight'){
+            if(wi2+1<cellEls.length) focusCell(wi2+1);
+            else {
               cellEls.forEach(function(c){c.setAttribute('tabindex','-1');});
               var gb=document.getElementById('wt-goto-btn');
               if(gb) gb.focus();
@@ -3124,19 +3129,27 @@ function buildWordTable(ref, text){
         else if(e.key==='End'){  e.preventDefault(); focusCell(cellEls.length-1); }
     });
 
-    td.addEventListener('focus', function(){
+    div.addEventListener('focus', function(){
       var wi2=parseInt(this.getAttribute('data-wi'),10);
-      cellEls.forEach(function(c,i){ c.setAttribute('tabindex', i===wi2?'0':'-1'); });
-      refTd.setAttribute('tabindex','-1');
+      cellEls.forEach(function(c,i){ c.setAttribute('tabindex',i===wi2?'0':'-1'); });
+      refDiv.setAttribute('tabindex','-1');
+      this.style.outline='4px solid #ffbf47';
+      this.style.outlineOffset='-2px';
+      this.style.background='var(--primary-soft)';
+    });
+    div.addEventListener('blur', function(){
+      this.style.outline='none';
+      this.style.background='#fff';
     });
 
-    row.appendChild(td);
-    cellEls.push(td);
+    row.appendChild(div);
+    cellEls.push(div);
   });
 
-  // ── Go to Hear Phrase button cell ─────────────────────────────────────────
-  var goBtnTd = document.createElement('td');
-  goBtnTd.style.cssText = 'border:2px solid #8a9ab0;padding:4px 8px;background:#fff;vertical-align:middle;';
+  // ── Go to Hear Phrase button ──────────────────────────────────────────────
+  var goBtnDiv = document.createElement('div');
+  goBtnDiv.style.cssText = 'border:2px solid #8a9ab0;border-left:none;padding:4px 8px;background:#fff;'+
+    'display:flex;align-items:center;flex-shrink:0;';
   var goBtn = document.createElement('button');
   goBtn.id = 'wt-goto-btn';
   goBtn.textContent = 'Go to Hear Phrase';
@@ -3158,32 +3171,31 @@ function buildWordTable(ref, text){
     }
   });
   goBtn.addEventListener('keydown', function(e){
-    if(e.key==='ArrowUp' || e.key==='ArrowLeft'){
+    if(e.key==='ArrowUp'||e.key==='ArrowLeft'){
       e.preventDefault();
       focusCell(cellEls.length-1);
     }
   });
-  goBtnTd.appendChild(goBtn);
-  row.appendChild(goBtnTd);
+  goBtnDiv.appendChild(goBtn);
+  row.appendChild(goBtnDiv);
 
-  table.appendChild(row);
+  wrap.appendChild(row);
 
-  // ── Helper: focus a word cell by index ───────────────────────────────────
+  // ── Helper ────────────────────────────────────────────────────────────────
   function focusCell(idx){
-    if(idx < 0) idx = 0;
-    if(idx >= cellEls.length) idx = cellEls.length-1;
-    refTd.setAttribute('tabindex','-1');
-    cellEls.forEach(function(c,i){ c.setAttribute('tabindex', i===idx?'0':'-1'); });
+    if(idx<0) idx=0;
+    if(idx>=cellEls.length) idx=cellEls.length-1;
+    refDiv.setAttribute('tabindex','-1');
+    cellEls.forEach(function(c,i){ c.setAttribute('tabindex',i===idx?'0':'-1'); });
     cellEls[idx].focus();
   }
 
-  // ── Focus reference cell after table builds ─────────────────────────────
-  // Use 350ms so we always fire after focusFirstGameElement (150ms) settles
+  // ── Focus reference cell after table builds ───────────────────────────────
   setTimeout(function(){
-    refTd.setAttribute('tabindex','0');
+    refDiv.setAttribute('tabindex','0');
     cellEls.forEach(function(c){ c.setAttribute('tabindex','-1'); });
-    refTd.scrollIntoView({block:'nearest',behavior:'instant'});
-    refTd.focus();
+    refDiv.scrollIntoView({block:'nearest',behavior:'instant'});
+    refDiv.focus();
   }, 350);
 }
 
