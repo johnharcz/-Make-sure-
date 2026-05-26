@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bible-memory-game-pwa-v1';
+const CACHE_NAME = 'bible-memory-game-accessible-v3';
 const APP_SHELL = [
   './',
   './index.html',
